@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String?
+  createdAt     DateTime @default(now())
+  orders        Order[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  productId     String   @unique // CMS ID from Webflow
+  variantId     String   @unique // CMS variant ID from Webflow
+  name          String
+  slug          String   @unique
+  handle        String?
+  type          String?
+  description   String?
+  stone         String?
+  altText       String?
+  category      String?
+  price         Float
+  priceValue    Float
+  currency      String   @default("EUR")
+  stock         Int      @default(0)
+  images        Json     // Array of image objects with url, type, sort_order
+  mainImage     String?
+  specialImage  String?
+  specialImage2 String?
+  hoverImage    String?
+  hoverImageInstallation String?
+  selectionSliderImage String?
+  color         String?
+  buttonHeaderColor String?
+  specialFieldSlogan String?
+  specialFieldText String?
+  specialFieldButton String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orderItems    OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  total           Float
+  currency        String      @default("EUR")
+  status          OrderStatus @default(PENDING)
+  paymentIntentId String?
+  shippingAddress Json?
+  billingAddress  Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Float
+  createdAt   DateTime @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
