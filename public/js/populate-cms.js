@@ -1510,6 +1510,9 @@
       const mainImg = card.querySelector('.product-main-image');
       const hoverImg = card.querySelector('.product-hover-image');
       if (mainImg && hoverImg && product.hover_image) {
+        // Add smooth transitions
+        mainImg.style.transition = 'opacity 0.5s ease-in-out';
+        hoverImg.style.transition = 'opacity 0.5s ease-in-out';
         card.addEventListener('mouseenter', () => {
           hoverImg.style.opacity = '1';
           mainImg.style.opacity = '0';
@@ -1657,10 +1660,13 @@
         // Each slide shows: Product name, Stone description, Price
         // Image shows interior design scene (bathroom, living room, etc.)
         
-        // Add hover effect
+        // Add hover effect with smooth transitions
         const mainImg = slide.querySelector('.slider-main_image');
         const secondImg = slide.querySelector('.slider-main_image-2');
         if (mainImg && secondImg && hoverImageUrl !== mainImageUrl) {
+          // Add smooth transitions
+          mainImg.style.transition = 'opacity 0.5s ease-in-out';
+          secondImg.style.transition = 'opacity 0.5s ease-in-out';
           slide.addEventListener('mouseenter', () => {
             mainImg.style.opacity = '0';
             secondImg.style.opacity = '1';

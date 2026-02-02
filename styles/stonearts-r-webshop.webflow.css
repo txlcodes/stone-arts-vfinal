@@ -2484,7 +2484,7 @@ blockquote {
   height: 100%;
   margin-right: 0;
   padding-right: 0;
-  transition: transform .4s;
+  transition: transform .4s, opacity 0.5s ease-in-out;
   position: absolute;
   inset: 0%;
 }
@@ -3229,6 +3229,7 @@ blockquote {
   display: inline-block;
   position: absolute;
   inset: 0%;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .page-wrapper {
