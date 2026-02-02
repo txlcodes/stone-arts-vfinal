@@ -1455,9 +1455,59 @@
         slide.className = 'swiper-slide is-slider-main w-dyn-item';
         slide.setAttribute('role', 'listitem');
         
-        const mainImageUrl = product.mainImage || '';
-        const hoverImageUrl = product.hover_image || product.mainImage || '';
-        const description = product.description || '';
+        // Prioritize interior design/application images over product shots
+        // 1. Check for installation/interior images in images array
+        // 2. Check hover_image_installation (interior design scene)
+        // 3. Fallback to selection_slider_image (interior design)
+        // 4. Last resort: mainImage (product shot)
+        let mainImageUrl = '';
+        if (product.images && Array.isArray(product.images)) {
+          // Look for installation or application type images (interior design scenes)
+          const installationImage = product.images.find(img => 
+            img.type === 'installation' || 
+            img.type === 'application' || 
+            img.type === 'interior' ||
+            (img.url && (img.url.includes('Installation') || img.url.includes('Bedroom') || img.url.includes('Living') || img.url.includes('Bathroom')))
+          );
+          if (installationImage) {
+            mainImageUrl = installationImage.url;
+          }
+        }
+        
+        // If no installation image found, try hover_image_installation (interior design)
+        if (!mainImageUrl && product.hover_image_installation) {
+          mainImageUrl = product.hover_image_installation;
+        }
+        
+        // Fallback to selection_slider_image (usually interior design)
+        if (!mainImageUrl && product.selection_slider_image) {
+          mainImageUrl = product.selection_slider_image;
+        }
+        
+        // Last resort: mainImage (product shot)
+        if (!mainImageUrl) {
+          mainImageUrl = product.mainImage || '';
+        }
+        
+        // For hover, use a different interior design image if available
+        let hoverImageUrl = '';
+        if (product.images && Array.isArray(product.images)) {
+          // Find a different installation/interior image for hover
+          const hoverInstallationImage = product.images.find(img => 
+            img.type === 'installation' && img.url !== mainImageUrl
+          );
+          if (hoverInstallationImage) {
+            hoverImageUrl = hoverInstallationImage.url;
+          }
+        }
+        if (!hoverImageUrl && product.hover_image_installation && product.hover_image_installation !== mainImageUrl) {
+          hoverImageUrl = product.hover_image_installation;
+        }
+        if (!hoverImageUrl) {
+          hoverImageUrl = product.hover_image || mainImageUrl;
+        }
+        
+        const description = product.stone || product.description || '';
         const price = product.price || '€220.00';
         const currency = product.currency || 'EUR';
         
