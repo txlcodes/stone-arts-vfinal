@@ -1210,9 +1210,9 @@
       handle: '',
       type: 'Physical',
       description: '',
-      category: 'AKUROCK Zubehör',
+      category: '', // User must fill in - no default template
       price: '',
-      priceValue: 0,
+      priceValue: null, // No default template value
       currency: 'EUR',
       mainImage: '',
       selection_slider_image: '',
