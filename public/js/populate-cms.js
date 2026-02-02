@@ -133,12 +133,24 @@
         }
       }
       
-      // Final fallback: Load from JSON file (with cache busting)
+      // Final fallback: Load from JSON file - try API route first, then static file
       console.log('populate-cms.js: Loading CMS data from JSON file');
-      const cacheBuster = '?v=' + Date.now();
-      const response = await fetch('/data/mock-cms-data.json' + cacheBuster);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+      let response;
+      try {
+        // Try API route first (works better on serverless platforms)
+        const cacheBuster = '?v=' + Date.now();
+        response = await fetch('/api/data/mock-cms-data' + cacheBuster);
+        if (!response.ok) {
+          throw new Error(`API route failed: ${response.statusText}`);
+        }
+      } catch (apiError) {
+        console.warn('populate-cms.js: API route failed, trying static file:', apiError);
+        // Fallback to static file
+        const cacheBuster = '?v=' + Date.now();
+        response = await fetch('/data/mock-cms-data.json' + cacheBuster);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+        }
       }
       const jsonText = await response.text();
       console.log('populate-cms.js: JSON file size:', jsonText.length, 'characters');

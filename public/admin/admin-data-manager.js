@@ -37,11 +37,22 @@
           return data;
         }
         
-        // Fallback to JSON file
+        // Fallback to JSON file - try API route first, then static file
         console.log('AdminDataManager: localStorage empty, loading from JSON file');
-        const response = await fetch('/data/mock-cms-data.json');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+        let response;
+        try {
+          // Try API route first (works better on serverless platforms)
+          response = await fetch('/api/data/mock-cms-data');
+          if (!response.ok) {
+            throw new Error(`API route failed: ${response.statusText}`);
+          }
+        } catch (apiError) {
+          console.warn('AdminDataManager: API route failed, trying static file:', apiError);
+          // Fallback to static file
+          response = await fetch('/data/mock-cms-data.json');
+          if (!response.ok) {
+            throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+          }
         }
         const data = await response.json();
         
@@ -188,10 +199,19 @@
      */
     resetToDefault: async function() {
       try {
-        // Load from JSON file
-        const response = await fetch('/data/mock-cms-data.json');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch default data: ${response.statusText}`);
+        // Load from JSON file - try API route first, then static file
+        let response;
+        try {
+          response = await fetch('/api/data/mock-cms-data');
+          if (!response.ok) {
+            throw new Error(`API route failed: ${response.statusText}`);
+          }
+        } catch (apiError) {
+          console.warn('AdminDataManager: API route failed, trying static file:', apiError);
+          response = await fetch('/data/mock-cms-data.json');
+          if (!response.ok) {
+            throw new Error(`Failed to fetch default data: ${response.statusText}`);
+          }
         }
         const data = await response.json();
         
