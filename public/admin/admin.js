@@ -1336,12 +1336,42 @@
 
     if (AdminPanel.currentEditingAccessory) {
       accessoryData.id = AdminPanel.currentEditingAccessory.id;
+      accessoryData.productId = AdminPanel.currentEditingAccessory.productId;
+      accessoryData.variantId = AdminPanel.currentEditingAccessory.variantId;
     } else {
+      // New accessory - generate unique IDs
       accessoryData.id = accessoryData.slug || `accessory-${Date.now()}`;
+      
+      // Generate unique productId and variantId (24-character hex string like MongoDB ObjectId)
+      const generateId = () => {
+        const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
+        const random = Array.from({length: 16}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return timestamp + random;
+      };
+      
+      accessoryData.productId = accessoryData.productId || generateId();
+      accessoryData.variantId = accessoryData.variantId || generateId();
+      accessoryData.createdOn = new Date().toISOString();
     }
+
+    accessoryData.updatedOn = new Date().toISOString();
+    accessoryData.publishedOn = accessoryData.publishedOn || new Date().toISOString();
 
     if (!accessoryData.handle) {
       accessoryData.handle = accessoryData.slug;
+    }
+    
+    // Ensure priceValue is set from price string if needed
+    if (!accessoryData.priceValue && accessoryData.price) {
+      const priceMatch = accessoryData.price.match(/[\d.]+/);
+      if (priceMatch) {
+        accessoryData.priceValue = parseFloat(priceMatch[0]);
+      }
+    }
+    
+    // Ensure currency is set
+    if (!accessoryData.currency) {
+      accessoryData.currency = 'EUR';
     }
 
     if (!AdminPanel.cmsData.accessories) {
@@ -1358,7 +1388,23 @@
     }
 
     if (window.AdminDataManager.saveCMSData(AdminPanel.cmsData)) {
-      showNotification('Accessory saved successfully', 'success');
+      // Auto-sync accessories to database (they're products with category "AKUROCK Zubehör")
+      // Convert accessories to products format for sync
+      const accessoriesAsProducts = AdminPanel.cmsData.accessories.map(acc => ({
+        ...acc,
+        category: acc.category || 'AKUROCK Zubehör'
+      }));
+      
+      window.AdminDataManager.syncToServer({ products: accessoriesAsProducts })
+        .then(result => {
+          console.log('Accessories synced to database:', result);
+          showNotification(`Accessory saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`, 'success');
+        })
+        .catch(error => {
+          console.error('Failed to sync accessory to database:', error);
+          showNotification('Accessory saved locally, but failed to sync to database. Check console.', 'warning');
+        });
+      
       AdminPanel.closeModal();
       renderAccessoriesList();
       updateDashboardStats();
@@ -1698,9 +1744,22 @@
 
     if (AdminPanel.currentEditingSampleBox) {
       boxData.id = AdminPanel.currentEditingSampleBox.id;
+      boxData.productId = AdminPanel.currentEditingSampleBox.productId;
+      boxData.variantId = AdminPanel.currentEditingSampleBox.variantId;
       boxData.createdOn = AdminPanel.currentEditingSampleBox.createdOn || new Date().toISOString();
     } else {
+      // New sample box - generate unique IDs
       boxData.id = boxData.slug || `sample-box-${Date.now()}`;
+      
+      // Generate unique productId and variantId (24-character hex string like MongoDB ObjectId)
+      const generateId = () => {
+        const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
+        const random = Array.from({length: 16}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return timestamp + random;
+      };
+      
+      boxData.productId = boxData.productId || generateId();
+      boxData.variantId = boxData.variantId || generateId();
       boxData.createdOn = new Date().toISOString();
     }
 
@@ -1708,6 +1767,24 @@
     boxData.publishedOn = boxData.publishedOn || new Date().toISOString();
     boxData.handle = boxData.handle || boxData.slug;
     boxData.type = 'Physical';
+    
+    // Ensure category is set for sample boxes
+    if (!boxData.category) {
+      boxData.category = 'AKUROCK Muster';
+    }
+    
+    // Ensure priceValue is set from price string if needed
+    if (!boxData.priceValue && boxData.price) {
+      const priceMatch = boxData.price.match(/[\d.]+/);
+      if (priceMatch) {
+        boxData.priceValue = parseFloat(priceMatch[0]);
+      }
+    }
+    
+    // Ensure currency is set
+    if (!boxData.currency) {
+      boxData.currency = 'EUR';
+    }
 
     if (!AdminPanel.cmsData.products) {
       AdminPanel.cmsData.products = [];
@@ -1723,7 +1800,18 @@
     }
 
     if (window.AdminDataManager.saveCMSData(AdminPanel.cmsData)) {
-      showNotification('Sample box saved successfully', 'success');
+      // Auto-sync to database (sample boxes are products with category "AKUROCK Muster")
+      // The sample box is already in products array, so sync all products
+      window.AdminDataManager.syncToServer(AdminPanel.cmsData)
+        .then(result => {
+          console.log('Sample box synced to database:', result);
+          showNotification(`Sample box saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`, 'success');
+        })
+        .catch(error => {
+          console.error('Failed to sync sample box to database:', error);
+          showNotification('Sample box saved locally, but failed to sync to database. Check console.', 'warning');
+        });
+      
       AdminPanel.closeModal();
       renderSampleBoxesList();
       updateDashboardStats();
