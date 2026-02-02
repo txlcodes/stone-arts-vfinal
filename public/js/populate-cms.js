@@ -1438,11 +1438,14 @@
       const priceValue = product.priceValue || parseFloat(product.price?.replace(/[^\d.]/g, '') || '0') || 0;
       const priceDisplay = product.price || `€${priceValue.toFixed(2)}`;
       
-      // Get description (stone type or description)
-      // PATTERN: Stone description should be detailed
-      const description = product.stone || product.description || '';
+      // PATTERN REFERENCE: Second image shows product cards for catalog/grid
+      // These can use product shots (mainImage) or interior scenes
+      // Get description (stone type) - matches reference format
+      // Reference shows: "Cremefarbener Sandstein", "Schwarzer Schieferstein", "Weißer Kristallmarmor"
+      const stoneDescription = product.stone || product.description || '';
       
       // Create product card
+      // PATTERN: Product cards show: Image, Name, Stone Type, Price
       const card = document.createElement('div');
       card.className = 'collection-item-5 w-dyn-item';
       card.setAttribute('role', 'listitem');
@@ -1455,7 +1458,7 @@
             <div class="header-wrap_samples">
               <div class="text-block-65" style="color: ${nameColor}; font-size: 3.6rem; font-weight: 600; line-height: 3.8rem; letter-spacing: -0.05em;">${product.name || ''}</div>
               <div class="description-wrap_samples">
-                <div class="text-block-70" style="color: ${nameColor}; opacity: 0.8; font-size: 15px; font-weight: 500;">${description}</div>
+                <div class="text-block-70" style="color: ${nameColor}; opacity: 0.8; font-size: 15px; font-weight: 500;">${stoneDescription}</div>
               </div>
             </div>
             <div class="price-wrap_samples">
@@ -1622,20 +1625,26 @@
           hoverImageUrl = product.hover_image || mainImageUrl;
         }
         
-        const description = product.stone || product.description || '';
+        // PATTERN: Use stone description (detailed), not product description
+        // Reference: First image shows "Cremefarbener Sandstein" etc. (stone type)
+        const stoneDescription = product.stone || product.description || '';
         const price = product.price || '€220.00';
         const currency = product.currency || 'EUR';
         
+        // Ensure image path is correct (local or CDN)
+        const displayImageUrl = getImagePath({ ...product, mainImage: mainImageUrl }, 'mainImage') || mainImageUrl;
+        const displayHoverUrl = getImagePath({ ...product, mainImage: hoverImageUrl }, 'mainImage') || hoverImageUrl;
+        
         slide.innerHTML = `
-          <a href="detail_product.html?product=${product.slug}" class="slider-selector_link is-slider-main w-inline-block">
+          <a href="/product/${product.slug}" class="slider-selector_link is-slider-main w-inline-block">
             <div class="slider-main_image-height is-slider-main">
-              <img src="${mainImageUrl}" loading="lazy" alt="${product.name}" class="slider-main_image">
-              <img src="${hoverImageUrl}" loading="lazy" style="opacity:0" alt="${product.name}" class="slider-main_image-2">
+              <img src="${displayImageUrl}" loading="lazy" alt="${product.name}" class="slider-main_image" onerror="this.onerror=null; this.src='${mainImageUrl}'">
+              <img src="${displayHoverUrl}" loading="lazy" style="opacity:0" alt="${product.name}" class="slider-main_image-2" onerror="this.onerror=null; this.src='${hoverImageUrl}'">
             </div>
             <div class="slider-main_text-wrapper is-slider-main">
               <div class="slider-main_text-holder is-slider-main">
-                <h3 class="heading-142">${product.name}</h3>
-                <h4 class="heading-144">${description}</h4>
+                <h3 class="heading-142">${product.name || ''}</h3>
+                <h4 class="heading-144">${stoneDescription}</h4>
               </div>
               <div class="slider-main_price-holder">
                 <h3 data-commerce-type="variation-price" class="heading-143">${price} ${currency}</h3>
@@ -1643,6 +1652,10 @@
             </div>
           </a>
         `;
+        
+        // PATTERN REFERENCE: This matches the first image - interior design examples
+        // Each slide shows: Product name, Stone description, Price
+        // Image shows interior design scene (bathroom, living room, etc.)
         
         // Add hover effect
         const mainImg = slide.querySelector('.slider-main_image');
@@ -2167,7 +2180,7 @@
           p.id.toLowerCase() === productLink.toLowerCase()
         );
         if (product && link.tagName === 'A') {
-          link.href = `detail_product.html?product=${product.slug}`;
+          link.href = `/product/${product.slug}`;
         }
       }
     });
