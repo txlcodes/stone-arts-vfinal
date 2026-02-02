@@ -1528,9 +1528,9 @@
       description: '',
       stone: '',
       special_field_slogan: '',
-      category: 'AKUROCK Muster',
-      price: '€5.00',
-      priceValue: 5.00,
+      category: '', // User must fill in - no default template
+      price: '',
+      priceValue: null, // No default template value
       currency: 'EUR',
       mainImage: '',
       selection_slider_image: '',
