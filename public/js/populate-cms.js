@@ -1127,6 +1127,8 @@
       productCards.forEach(card => {
         const img = card.querySelector('img');
         if (img) {
+          // Add smooth transition
+          img.style.transition = 'opacity 0.5s ease-in-out';
           card.addEventListener('mouseenter', () => {
             img.src = product.hover_image;
           });
@@ -1468,7 +1470,7 @@
           <div class="img_wrap">
             <img src="${displayImage}" alt="${product.name || ''}" loading="lazy" width="171" class="image-132 product-main-image" data-hover-image="${product.hover_image || displayImage}" onerror="this.onerror=null; this.src='${product.mainImage || productImages[0] || ''}';">
             ${productImages.length > 1 ? `
-              <img src="${productImages[1]}" alt="" loading="lazy" style="position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.3s;" class="product-hover-image">
+              <img src="${productImages[1]}" alt="" loading="lazy" style="position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.5s ease-in-out;" class="product-hover-image">
             ` : ''}
           </div>
           <div class="bottom_addtocart-wrap">
@@ -1642,7 +1644,7 @@
           <a href="/product/${product.slug}" class="slider-selector_link is-slider-main w-inline-block">
             <div class="slider-main_image-height is-slider-main">
               <img src="${displayImageUrl}" loading="lazy" alt="${product.name}" class="slider-main_image" onerror="this.onerror=null; this.src='${mainImageUrl}'">
-              <img src="${displayHoverUrl}" loading="lazy" style="opacity:0" alt="${product.name}" class="slider-main_image-2" onerror="this.onerror=null; this.src='${hoverImageUrl}'">
+              <img src="${displayHoverUrl}" loading="lazy" style="opacity:0; transition: opacity 0.5s ease-in-out;" alt="${product.name}" class="slider-main_image-2" onerror="this.onerror=null; this.src='${hoverImageUrl}'">
             </div>
             <div class="slider-main_text-wrapper is-slider-main">
               <div class="slider-main_text-holder is-slider-main">
