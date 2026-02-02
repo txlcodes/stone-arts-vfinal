@@ -582,9 +582,9 @@
       description: '',
       stone: '',
       alt_text: '',
-      category: 'AKUROCK Akustikpaneele',
+      category: '',
       price: '',
-      priceValue: 0,
+      priceValue: null,
       currency: 'EUR',
       mainImage: '',
       special_image: '',
@@ -1095,10 +1095,22 @@
     // Preserve IDs and timestamps
     if (AdminPanel.currentEditingProduct) {
       productData.id = AdminPanel.currentEditingProduct.id;
+      productData.productId = AdminPanel.currentEditingProduct.productId;
+      productData.variantId = AdminPanel.currentEditingProduct.variantId;
       productData.createdOn = AdminPanel.currentEditingProduct.createdOn || new Date().toISOString();
     } else {
-      // New product - generate ID from slug
+      // New product - generate unique IDs
       productData.id = productData.slug || `product-${Date.now()}`;
+      
+      // Generate unique productId and variantId (24-character hex string like MongoDB ObjectId)
+      const generateId = () => {
+        const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
+        const random = Array.from({length: 16}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return timestamp + random;
+      };
+      
+      productData.productId = productData.productId || generateId();
+      productData.variantId = productData.variantId || generateId();
       productData.createdOn = new Date().toISOString();
     }
 
@@ -1108,6 +1120,14 @@
     // Ensure handle matches slug if not set
     if (!productData.handle) {
       productData.handle = productData.slug;
+    }
+    
+    // Ensure priceValue is set from price string if needed
+    if (!productData.priceValue && productData.price) {
+      const priceMatch = productData.price.match(/[\d.]+/);
+      if (priceMatch) {
+        productData.priceValue = parseFloat(priceMatch[0]);
+      }
     }
 
     // Save to CMS data
@@ -1128,7 +1148,17 @@
 
     // Save to localStorage
     if (window.AdminDataManager.saveCMSData(AdminPanel.cmsData)) {
-      showNotification('Product saved successfully', 'success');
+      // Auto-sync to database
+      window.AdminDataManager.syncToServer(AdminPanel.cmsData)
+        .then(result => {
+          console.log('Product synced to database:', result);
+          showNotification(`Product saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`, 'success');
+        })
+        .catch(error => {
+          console.error('Failed to sync to database:', error);
+          showNotification('Product saved locally, but failed to sync to database. Check console.', 'warning');
+        });
+      
       AdminPanel.closeModal();
       renderProductsList();
       updateDashboardStats();
