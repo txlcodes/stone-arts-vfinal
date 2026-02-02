@@ -528,7 +528,7 @@
       
       // For main products - map to block images
       const localImageMap = {
-        'brush': 'images/Brush_Block.webp',
+        'brush': 'images/667530dfb4d435589f6b7508_Brush.webp',
         'whisper': 'images/whisper_block.webp',
         'gaia': 'images/Gaia_Block.webp',
         'ligia': 'images/Ligia_block.webp',
