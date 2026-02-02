@@ -570,7 +570,7 @@
    * Show new product form
    */
   AdminPanel.addProduct = function() {
-    // Create empty product template
+    // Create empty product template following the HTML pattern
     const newProduct = {
       id: '',
       productId: '',
@@ -580,11 +580,11 @@
       handle: '',
       type: 'Physical',
       description: '',
-      stone: '',
+      stone: '', // Should be detailed description like "Cremefarbener Sandsteinfelsen aus den sonnigen Landschaften Rajasthans."
       alt_text: '',
-      category: '',
+      category: '', // Will be required - no default template value
       price: '',
-      priceValue: null,
+      priceValue: null, // Will be required - no default template value
       currency: 'EUR',
       mainImage: '',
       special_image: '',
@@ -592,7 +592,7 @@
       hover_image: '',
       hover_image_installation: '',
       selection_slider_image: '',
-      images: [],
+      images: [], // Should have 4 images: panel, installation, stone, closeup
       color: '',
       button_header_color: '',
       special_field_slogan: '',
@@ -601,7 +601,7 @@
       item_style: 'Tall',
       sorting: 999,
       video: null,
-      dimensions: '',
+      dimensions: '', // Format: "240 x 60 x 2.3 cm (1.44m²)"
       size: '',
       area: '',
       weight: null,
@@ -615,7 +615,7 @@
         length: null,
         download_files: []
       },
-      deliveryTime: '5-10 days',
+      deliveryTime: '5-10 Tage',
       requiresShipping: true,
       createdOn: new Date().toISOString(),
       updatedOn: new Date().toISOString(),
@@ -679,6 +679,15 @@
         <button class="admin-modal-close" onclick="AdminPanel.closeModal()">&times;</button>
       </div>
       <div class="admin-modal-body">
+        <div style="background: #f0f7ff; border-left: 4px solid #0066cc; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+          <h4 style="margin: 0 0 0.5rem 0; color: #0066cc;">📐 Product Page Pattern Guide</h4>
+          <p style="margin: 0; font-size: 0.9rem; color: #333;">
+            Each product follows the same structure as shown in the HTML template. Required fields are marked with *. 
+            Ensure you fill in: <strong>Product Name</strong>, <strong>Slug</strong>, <strong>Stone Description</strong>, 
+            <strong>Dimensions</strong>, <strong>Price</strong>, <strong>Main Image</strong>, <strong>Selection Slider Image</strong>, 
+            and <strong>Image Gallery</strong> (4 images: panel, installation, stone, closeup).
+          </p>
+        </div>
         <form id="productForm" class="admin-form">
           <!-- Basic Information -->
           <div class="admin-form-section">
@@ -686,10 +695,16 @@
             <div class="admin-form-row">
               <div class="admin-form-group">
                 <label class="admin-form-label">Product Name *</label>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="admin-text-small admin-text-muted">💡 Product variant name (e.g., "Brush", "Whisper", "Yami")</span>
+                </div>
                 <input type="text" name="name" class="admin-form-input" value="${escapeHtml(product.name || '')}" required>
               </div>
               <div class="admin-form-group">
                 <label class="admin-form-label">Slug *</label>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="admin-text-small admin-text-muted">💡 URL-friendly name (e.g., "brush", "whisper") - Used in /product/[slug]</span>
+                </div>
                 <input type="text" name="slug" class="admin-form-input" value="${escapeHtml(product.slug || '')}" required>
               </div>
             </div>
@@ -706,15 +721,27 @@
                 </select>
               </div>
             </div>
-            <div class="admin-form-group admin-form-group-full">
-              <label class="admin-form-label">Description</label>
-              <textarea name="description" class="admin-form-textarea" rows="3">${escapeHtml(product.description || '')}</textarea>
+              <div class="admin-form-group admin-form-group-full">
+                <label class="admin-form-label">Description</label>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="admin-text-small admin-text-muted">
+                    💡 Product description (optional) - Can be used for additional product details
+                  </span>
+                </div>
+                <textarea name="description" class="admin-form-textarea" rows="3">${escapeHtml(product.description || '')}</textarea>
+              </div>
+            <div class="admin-form-row">
+              <div class="admin-form-group admin-form-group-full">
+                <label class="admin-form-label">Stone Description *</label>
+                <div style="margin-bottom: 0.5rem;">
+                  <span class="admin-text-small admin-text-muted">
+                    💡 Detailed description of the stone (e.g., "Cremefarbener Sandsteinfelsen aus den sonnigen Landschaften Rajasthans.")
+                  </span>
+                </div>
+                <textarea name="stone" class="admin-form-textarea" rows="2" required>${escapeHtml(product.stone || '')}</textarea>
+              </div>
             </div>
             <div class="admin-form-row">
-              <div class="admin-form-group">
-                <label class="admin-form-label">Stone Type</label>
-                <input type="text" name="stone" class="admin-form-input" value="${escapeHtml(product.stone || '')}">
-              </div>
               <div class="admin-form-group">
                 <label class="admin-form-label">Alt Text</label>
                 <input type="text" name="alt_text" class="admin-form-input" value="${escapeHtml(product.alt_text || '')}">
@@ -727,12 +754,18 @@
             <h3 class="admin-form-section-title">💰 Pricing</h3>
           <div class="admin-form-row">
             <div class="admin-form-group">
-              <label class="admin-form-label">Price Display (e.g., €220.00)</label>
-              <input type="text" name="price" class="admin-form-input" value="${escapeHtml(product.price || '')}">
+              <label class="admin-form-label">Price Display *</label>
+              <div style="margin-bottom: 0.5rem;">
+                <span class="admin-text-small admin-text-muted">💡 Display format (e.g., "€220.00")</span>
+              </div>
+              <input type="text" name="price" class="admin-form-input" value="${escapeHtml(product.price || '')}" placeholder="€220.00" required>
             </div>
             <div class="admin-form-group">
-              <label class="admin-form-label">Price Value (numeric)</label>
-              <input type="number" name="priceValue" class="admin-form-input" step="0.01" value="${product.priceValue || 0}">
+              <label class="admin-form-label">Price Value (numeric) *</label>
+              <div style="margin-bottom: 0.5rem;">
+                <span class="admin-text-small admin-text-muted">💡 Numeric value for calculations</span>
+              </div>
+              <input type="number" name="priceValue" class="admin-form-input" step="0.01" value="${product.priceValue || 0}" required>
             </div>
             <div class="admin-form-group">
               <label class="admin-form-label">Currency</label>
@@ -748,13 +781,14 @@
             <h3 class="admin-form-section-title">🖼️ Images</h3>
             <div class="admin-form-row">
               <div class="admin-form-group admin-form-group-full">
-                <label class="admin-form-label">Main Image</label>
+                <label class="admin-form-label">Main Image *</label>
                 <div style="margin-bottom: 0.5rem;">
                   <span class="admin-text-small admin-text-muted">
-                    💡 Enter either: <strong>URL</strong> (https://...) or <strong>Local Path</strong> (images/filename.webp)
+                    💡 Primary product image - Enter either: <strong>URL</strong> (https://...) or <strong>Local Path</strong> (images/filename.webp)
+                    <br>This is the main image displayed in product cards and galleries.
                   </span>
                 </div>
-                <input type="text" name="mainImage" class="admin-form-input" value="${escapeHtml(product.mainImage || '')}" placeholder="https://cdn... OR images/Brush_Block.webp">
+                <input type="text" name="mainImage" class="admin-form-input" value="${escapeHtml(product.mainImage || '')}" placeholder="https://cdn... OR images/Brush_Block.webp" required>
               </div>
             </div>
             <div class="admin-form-row">
@@ -790,16 +824,25 @@
               </div>
             </div>
             <div class="admin-form-group admin-form-group-full">
-              <label class="admin-form-label">Selection Slider Image</label>
+              <label class="admin-form-label">Selection Slider Image *</label>
               <div style="margin-bottom: 0.5rem;">
-                <span class="admin-text-small admin-text-muted">URL or images/filename.webp</span>
+                <span class="admin-text-small admin-text-muted">
+                  💡 This image appears in the variant selector slider (showing all product variants). 
+                  <br>URL or images/filename.webp - Should be a small thumbnail (95px width recommended)
+                </span>
               </div>
-              <input type="text" name="selection_slider_image" class="admin-form-input" value="${escapeHtml(product.selection_slider_image || '')}" placeholder="https://... OR images/...">
+              <input type="text" name="selection_slider_image" class="admin-form-input" value="${escapeHtml(product.selection_slider_image || '')}" placeholder="https://... OR images/..." required>
             </div>
 
             <!-- Image Gallery -->
             <div class="admin-form-group admin-form-group-full">
-              <label class="admin-form-label">Image Gallery</label>
+              <label class="admin-form-label">Image Gallery *</label>
+              <div style="margin-bottom: 0.5rem;">
+                <span class="admin-text-small admin-text-muted">
+                  💡 Add 4 images following this pattern: <strong>panel</strong>, <strong>installation</strong>, <strong>stone</strong>, <strong>closeup</strong>
+                  <br>These will display in the product slider and gallery sections.
+                </span>
+              </div>
               <input type="hidden" name="images" value='${JSON.stringify(product.images || []).replace(/'/g, "&#39;")}'>
               <div id="imageGalleryList" class="admin-image-list">
                 ${renderImageGallery(product.images || [])}
@@ -812,10 +855,17 @@
           <div class="admin-form-section">
             <h3 class="admin-form-section-title">⚙️ Technical Specifications</h3>
           <div class="admin-form-row">
-            <div class="admin-form-group">
-              <label class="admin-form-label">Dimensions</label>
-              <input type="text" name="dimensions" class="admin-form-input" value="${escapeHtml(product.dimensions || '')}">
+            <div class="admin-form-group admin-form-group-full">
+              <label class="admin-form-label">Dimensions *</label>
+              <div style="margin-bottom: 0.5rem;">
+                <span class="admin-text-small admin-text-muted">
+                  💡 Format: "240 x 60 x 2.3 cm (1.44m²)" - This will display as "Größe pro Paneel - [your dimensions]"
+                </span>
+              </div>
+              <input type="text" name="dimensions" class="admin-form-input" value="${escapeHtml(product.dimensions || '')}" placeholder="240 x 60 x 2.3 cm (1.44m²)" required>
             </div>
+          </div>
+          <div class="admin-form-row">
             <div class="admin-form-group">
               <label class="admin-form-label">Size</label>
               <input type="text" name="size" class="admin-form-input" value="${escapeHtml(product.size || '')}">
@@ -846,7 +896,10 @@
           <div class="admin-form-row">
             <div class="admin-form-group">
               <label class="admin-form-label">Delivery Time</label>
-              <input type="text" name="deliveryTime" class="admin-form-input" value="${escapeHtml(product.deliveryTime || '')}">
+              <div style="margin-bottom: 0.5rem;">
+                <span class="admin-text-small admin-text-muted">💡 Display text (e.g., "5-10 Tage" or "5-10 days")</span>
+              </div>
+              <input type="text" name="deliveryTime" class="admin-form-input" value="${escapeHtml(product.deliveryTime || '5-10 Tage')}" placeholder="5-10 Tage">
             </div>
             <div class="admin-form-group">
               <label class="admin-form-label">Requires Shipping</label>
