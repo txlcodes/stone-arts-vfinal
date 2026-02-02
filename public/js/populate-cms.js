@@ -646,7 +646,24 @@
     }, 100);
   }
 
-  // Populate product detail page
+  /**
+   * Populate product detail page
+   * 
+   * PATTERN ENFORCEMENT: All product pages follow the same structure and pattern.
+   * This function ensures consistent population of:
+   * - Product name (bind="44360311-a628-3bd3-7fc8-c24734f06683")
+   * - Stone description (bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf1a")
+   * - Price (bind="44360311-a628-3bd3-7fc8-c24734f0668a")
+   * - Dimensions (.text-block-127)
+   * - Image gallery (bind="2fb8e092-727e-f3ca-475b-8178c0fc0239")
+   * - Variant selector (bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf1f")
+   * 
+   * All products must have:
+   * - name, slug, stone, dimensions, price, priceValue, mainImage, selection_slider_image
+   * - 4 images: panel, installation, stone, closeup
+   * 
+   * See PRODUCT-PAGE-PATTERN.md for full pattern documentation.
+   */
   function populateProductPage() {
     // Check if we're on a product detail page
     const productPageIndicator = document.querySelector('[bind="44360311-a628-3bd3-7fc8-c24734f06683"]');
@@ -683,8 +700,23 @@
       console.log('populate-cms.js: Populating product page for:', product.name);
     }
 
+    // Validate product has required fields for pattern consistency
+    const requiredFields = ['name', 'slug', 'stone', 'dimensions', 'price', 'priceValue', 'mainImage', 'selection_slider_image'];
+    const missingFields = requiredFields.filter(field => !product[field] || (Array.isArray(product[field]) && product[field].length === 0));
+    if (missingFields.length > 0) {
+      console.warn('populate-cms.js: Product missing required fields:', missingFields, 'Product:', product.name);
+    }
+    
+    // Validate image gallery has 4 images
+    if (!product.images || product.images.length < 4) {
+      console.warn('populate-cms.js: Product should have 4 images (panel, installation, stone, closeup). Found:', product.images?.length || 0, 'Product:', product.name);
+    }
+
     console.log('populate-cms.js: Product data:', {
       name: product.name,
+      slug: product.slug,
+      stone: product.stone ? '✓' : '✗ Missing',
+      dimensions: product.dimensions ? '✓' : '✗ Missing',
       images: product.images?.length || 0,
       hasAccessories: cmsData.accessories?.length > 0
     });
@@ -693,18 +725,42 @@
     applyColorScheme(product);
 
     // Product variant name - update ALL visible instances (mobile and desktop)
+    // This is the product name (e.g., "Brush", "Whisper", "Yami")
     const variantNameEls = document.querySelectorAll('[bind="44360311-a628-3bd3-7fc8-c24734f06683"], [bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae05"]');
     variantNameEls.forEach(el => {
       const section = el.closest('.product_text_wrapper');
       if (section && window.getComputedStyle(section).display !== 'none') {
-        el.textContent = product.name;
+        if (product.name) {
+          el.textContent = product.name;
+        } else {
+          console.warn('populate-cms.js: Product missing name');
+        }
       }
     });
 
     // Price - update ALL visible price elements (mobile and desktop)
+    // Format should match template: "€220.00 EUR"
     const priceEls = document.querySelectorAll('[bind="44360311-a628-3bd3-7fc8-c24734f0668a"], [bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae06"], [data-commerce-type="variation-price"]');
-    const priceText = product.price ? (product.price.includes('€') ? product.price : `€${product.price}`) : '€220.00';
-    const fullPriceText = priceText + ' ' + (product.currency || 'EUR');
+    let priceText = '';
+    if (product.price) {
+      // Ensure price has € symbol
+      priceText = product.price.includes('€') ? product.price : `€${product.price}`;
+      // Ensure it has proper formatting (e.g., €220.00)
+      if (!priceText.match(/€\s*\d+\.\d{2}/)) {
+        // Try to format it properly
+        const numMatch = priceText.match(/[\d.]+/);
+        if (numMatch) {
+          const num = parseFloat(numMatch[0]);
+          priceText = `€${num.toFixed(2)}`;
+        }
+      }
+    } else if (product.priceValue) {
+      priceText = `€${product.priceValue.toFixed(2)}`;
+    } else {
+      console.warn('populate-cms.js: Product missing price:', product.name);
+      priceText = '€220.00';
+    }
+    const fullPriceText = `${priceText} ${product.currency || 'EUR'}`;
     
     priceEls.forEach(el => {
       const section = el.closest('.product_text_wrapper');
@@ -713,9 +769,16 @@
       }
     });
 
-    // Variant selector label
-    const variantLabelEl = document.querySelector('[bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf1a"]');
-    if (variantLabelEl) variantLabelEl.textContent = product.name || '';
+    // Stone description - populate variant selector label (bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf1a")
+    // This should be the detailed stone description, not the product name
+    const stoneDescriptionEls = document.querySelectorAll('[bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf1a"], [bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae0b"], [bind="409f9c8b-4b78-5f06-d0ad-57ad5bbfb2ac"], [bind="3cf4aa70-0d84-d294-71cd-b36d5959da37"]');
+    stoneDescriptionEls.forEach(el => {
+      if (product.stone) {
+        el.textContent = product.stone;
+      } else {
+        console.warn('populate-cms.js: Product missing stone description:', product.name);
+      }
+    });
 
     // Product description - update all instances
     const descriptionEls = document.querySelectorAll('.product-description-wrapper p, .product-description-text');
@@ -725,12 +788,21 @@
       }
     });
 
-    // Product dimensions - populate all dimension fields with English text
+    // Product dimensions - populate all dimension fields
+    // Format should be: "Größe pro Paneel - 240 x 60 x 2.3 cm (1.44m²)" (German) or "Size per panel - ..." (English)
     const dimensionEls = document.querySelectorAll('.text-block-127');
     dimensionEls.forEach(el => {
       if (product.dimensions) {
-        // Format: "Size per panel - 240 x 60 x 2.3 cm (1.44m²)"
-        el.textContent = `Size per panel - ${product.dimensions}`;
+        // Check if dimensions already include prefix, if not add it
+        const dimText = product.dimensions.trim();
+        if (dimText.toLowerCase().includes('size per panel') || dimText.toLowerCase().includes('größe pro paneel')) {
+          el.textContent = dimText;
+        } else {
+          // Add prefix - use German format to match template
+          el.textContent = `Größe pro Paneel - ${dimText}`;
+        }
+      } else {
+        console.warn('populate-cms.js: Product missing dimensions:', product.name);
       }
     });
 
@@ -864,14 +936,27 @@
           
           console.log('populate-cms.js: Adding', sortedProducts.length, 'products to variant selector');
           
+          // Ensure all products in selector follow the pattern
+          // PATTERN ENFORCEMENT: Only include products that have required fields
           sortedProducts.forEach((p) => {
+            // Validate each product has required fields for pattern consistency
+            if (!p.selection_slider_image) {
+              console.warn('populate-cms.js: Product missing selection_slider_image, skipping from variant selector:', p.name);
+              return; // Skip products that don't follow pattern
+            }
+            if (!p.name || !p.slug) {
+              console.warn('populate-cms.js: Product missing name or slug, skipping from variant selector:', p);
+              return; // Skip products that don't follow pattern
+            }
+            
+            // All products follow the same pattern - use selection_slider_image for consistency
             const slide = document.createElement('div');
             slide.className = 'swiper-slide is-slider-selector w-dyn-item';
             slide.setAttribute('role', 'listitem');
             const isActive = p.slug === product.slug ? 'active' : '';
             const thumbImage = p.selection_slider_image || p.mainImage || '';
             slide.innerHTML = `
-              <a href="detail_product.html?product=${p.slug}" class="slider-selector_link is-slider-selector w-inline-block ${isActive}">
+              <a href="/product/${p.slug}" class="slider-selector_link is-slider-selector w-inline-block ${isActive}">
                 <div class="slider-selector_height">
                   <img loading="lazy" width="95" src="${thumbImage}" alt="${p.name || ''}" class="slider-selector_img">
                   <div class="checkmark_wrapper mobile"><img src="images/Aktive-Produkt-Selection-Kachel-Kreis-mit-Hackerl-Schwarz.svg" loading="lazy" alt="" class="checkmark_mobile"></div>
@@ -926,9 +1011,21 @@
           'ligia': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c5e85eaae26e4deef821_ligia.webp'
         };
         
+        // PATTERN ENFORCEMENT: Only include products that follow the pattern
         sortedProducts.forEach((p, index) => {
+          // Validate product has required fields
+          if (!p.selection_slider_image && !p.mainImage) {
+            console.warn('populate-cms.js: Product missing selection_slider_image and mainImage, skipping from desktop selector:', p.name);
+            return; // Skip products that don't follow pattern
+          }
+          if (!p.name || !p.slug) {
+            console.warn('populate-cms.js: Product missing name or slug, skipping from desktop selector:', p);
+            return; // Skip products that don't follow pattern
+          }
+          
           const isActive = p.slug === product.slug;
           // Use mapped image if available, otherwise fall back to selection_slider_image or mainImage
+          // PATTERN: All products should use selection_slider_image for consistency
           const thumbImage = sliderImageMap[p.slug] || p.selection_slider_image || p.mainImage || '';
           const slide = document.createElement('div');
           slide.setAttribute('bind', '1a91082b-8f19-b175-b9ba-0deb9fa8ae12');
@@ -937,8 +1034,8 @@
           slide.setAttribute('aria-label', `${index + 1} / ${sortedProducts.length}`);
           
           slide.innerHTML = `
-            <a bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae13" aria-label="Akurock Acoustic Panels Link" href="detail_product.html?product=${p.slug}" class="slider-selector_link is-slider-selector w-inline-block${isActive ? ' w--current' : ''}"${isActive ? ' aria-current="page"' : ''}>
-              <img bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae15" loading="lazy" width="95" alt="" src="${thumbImage}" class="slider-selector_img">
+            <a bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae13" aria-label="Akurock Acoustic Panels Link" href="/product/${p.slug}" class="slider-selector_link is-slider-selector w-inline-block${isActive ? ' w--current' : ''}"${isActive ? ' aria-current="page"' : ''}>
+              <img bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae15" loading="lazy" width="95" alt="${p.name || ''}" src="${thumbImage}" class="slider-selector_img">
               <div class="swiper-main-img"></div>
               <div class="checkmark_wrapper" style="display: ${isActive ? 'flex' : 'none'};">
                 <img src="https://cdn.prod.website-files.com/64ad4116e38ed7d405f77d26/667512ce089e636294d56006_Aktive%20Produkt%20Selection%20Kachel%20Kreis%20mit%20Hackerl%20Schwarz.svg" loading="lazy" alt="" class="image-215">
@@ -1311,11 +1408,19 @@
     // Clear existing content
     gridContainer.innerHTML = '';
 
-    sortedProducts.forEach((product) => {
-      // Get product images - use first 3 images from images array or fallback to mainImage
-      const productImages = product.images && product.images.length > 0 
-        ? product.images.slice(0, 3).map(img => img.url)
-        : product.mainImage ? [product.mainImage] : [];
+      // PATTERN ENFORCEMENT: Only display products that follow the pattern
+      sortedProducts.forEach((product) => {
+        // Validate product has required fields
+        if (!product.name || !product.slug || !product.mainImage) {
+          console.warn('populate-cms.js: Product missing required fields for homepage grid, skipping:', product.name);
+          return; // Skip products that don't follow pattern
+        }
+        
+        // Get product images - use first 3 images from images array or fallback to mainImage
+        // PATTERN: Products should have images array with 4 images
+        const productImages = product.images && product.images.length > 0 
+          ? product.images.slice(0, 3).map(img => img.url)
+          : product.mainImage ? [product.mainImage] : [];
       
       // Try local images first, fallback to CDN URLs
       const displayImage = getImagePath(product, 'mainImage') || 
@@ -1329,10 +1434,12 @@
       const cardBgColor = product.color || 'hsla(0, 0%, 95%, 0.30)';
       
       // Format price - extract numeric value
-      const priceValue = product.priceValue || parseFloat(product.price.replace(/[^\d.]/g, '')) || 0;
+      // PATTERN: All prices follow same format
+      const priceValue = product.priceValue || parseFloat(product.price?.replace(/[^\d.]/g, '') || '0') || 0;
       const priceDisplay = product.price || `€${priceValue.toFixed(2)}`;
       
       // Get description (stone type or description)
+      // PATTERN: Stone description should be detailed
       const description = product.stone || product.description || '';
       
       // Create product card
@@ -1450,12 +1557,20 @@
       // Clear existing slides and create new ones dynamically
       wrapper.innerHTML = '';
       
+      // PATTERN ENFORCEMENT: Only display products that follow the pattern
       sortedProducts.forEach((product) => {
+        // Validate product has required fields
+        if (!product.name || !product.slug) {
+          console.warn('populate-cms.js: Product missing required fields for homepage slider, skipping:', product);
+          return; // Skip products that don't follow pattern
+        }
+        
         const slide = document.createElement('div');
         slide.className = 'swiper-slide is-slider-main w-dyn-item';
         slide.setAttribute('role', 'listitem');
         
-        // Prioritize interior design/application images over product shots
+        // PATTERN: Prioritize interior design/application images over product shots
+        // This ensures all products display as interior design examples, not product cards
         // 1. Check for installation/interior images in images array
         // 2. Check hover_image_installation (interior design scene)
         // 3. Fallback to selection_slider_image (interior design)
@@ -2362,9 +2477,10 @@
       try {
         if (filename.includes('detail_product') || 
             pathname.includes('detail_product') || 
-            pathname.includes('product/') ||
+            pathname.includes('/product/') ||
             document.querySelector('[bind="44360311-a628-3bd3-7fc8-c24734f06683"]')) {
           console.log('populate-cms.js: Detected product detail page');
+          console.log('populate-cms.js: Ensuring product page follows pattern...');
           populateProductPage();
           // NOTE: initCartIntegration() is called INSIDE populateProductPage() after IDs are set
           // Do NOT call it here - it would run before form IDs are injected

@@ -1084,6 +1084,54 @@
   };
 
   /**
+   * Validate product follows pattern
+   */
+  function validateProductPattern(productData) {
+    const errors = [];
+    const warnings = [];
+
+    // Required fields
+    if (!productData.name || productData.name.trim() === '') {
+      errors.push('Product Name is required');
+    }
+    if (!productData.slug || productData.slug.trim() === '') {
+      errors.push('Slug is required');
+    }
+    if (!productData.stone || productData.stone.trim() === '') {
+      errors.push('Stone Description is required (detailed description)');
+    }
+    if (!productData.dimensions || productData.dimensions.trim() === '') {
+      errors.push('Dimensions are required (format: "240 x 60 x 2.3 cm (1.44m²)")');
+    }
+    if (!productData.price || productData.price.trim() === '') {
+      errors.push('Price Display is required');
+    }
+    if (!productData.priceValue || productData.priceValue === 0) {
+      errors.push('Price Value is required (numeric)');
+    }
+    if (!productData.mainImage || productData.mainImage.trim() === '') {
+      errors.push('Main Image is required');
+    }
+    if (!productData.selection_slider_image || productData.selection_slider_image.trim() === '') {
+      errors.push('Selection Slider Image is required (for variant selector)');
+    }
+
+    // Image gallery validation
+    if (!productData.images || !Array.isArray(productData.images) || productData.images.length < 4) {
+      warnings.push('Image Gallery should have 4 images: panel, installation, stone, closeup');
+    } else {
+      const imageTypes = productData.images.map(img => img.type).filter(Boolean);
+      const requiredTypes = ['panel', 'installation', 'stone', 'closeup'];
+      const missingTypes = requiredTypes.filter(type => !imageTypes.includes(type));
+      if (missingTypes.length > 0) {
+        warnings.push(`Image Gallery missing types: ${missingTypes.join(', ')}`);
+      }
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
    * Save product
    */
   AdminPanel.saveProduct = function() {
@@ -1183,6 +1231,19 @@
       }
     }
 
+    // Validate product follows pattern
+    const validation = validateProductPattern(productData);
+    if (validation.errors.length > 0) {
+      showNotification(`Cannot save: ${validation.errors.join('; ')}`, 'error');
+      return;
+    }
+    if (validation.warnings.length > 0) {
+      const proceed = confirm(`Warnings:\n${validation.warnings.join('\n')}\n\nDo you want to save anyway?`);
+      if (!proceed) {
+        return;
+      }
+    }
+
     // Save to CMS data
     if (!AdminPanel.cmsData.products) {
       AdminPanel.cmsData.products = [];
@@ -1205,7 +1266,12 @@
       window.AdminDataManager.syncToServer(AdminPanel.cmsData)
         .then(result => {
           console.log('Product synced to database:', result);
-          showNotification(`Product saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`, 'success');
+          const validation = validateProductPattern(productData);
+          let message = `Product saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`;
+          if (validation.warnings.length > 0) {
+            message += `\n⚠️ Warnings: ${validation.warnings.join('; ')}`;
+          }
+          showNotification(message, validation.warnings.length > 0 ? 'warning' : 'success');
         })
         .catch(error => {
           console.error('Failed to sync to database:', error);
