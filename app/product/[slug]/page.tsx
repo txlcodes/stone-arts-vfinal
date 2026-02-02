@@ -4,13 +4,25 @@ import { join } from 'path';
 // Read product page HTML template at build time
 function getProductPageHTML(): string {
   try {
-    // Read from the source HTML file
-    const htmlPath = join(process.cwd(), '../stoneartscrm/detail_product.html');
-    const content = readFileSync(htmlPath, 'utf-8');
-    // Extract body content (everything between <body> and </body>)
-    const bodyMatch = content.match(/<body>([\s\S]*)<\/body>/);
-    if (bodyMatch && bodyMatch[1]) {
-      return bodyMatch[1];
+    // Try multiple possible paths
+    const possiblePaths = [
+      join(process.cwd(), '../stoneartscrm/detail_product.html'),
+      join(process.cwd(), 'public/detail_product_template.html'),
+      join(process.cwd(), '../../stoneartscrm/detail_product.html'),
+    ];
+    
+    for (const htmlPath of possiblePaths) {
+      try {
+        const content = readFileSync(htmlPath, 'utf-8');
+        // Extract body content (everything between <body> and </body>)
+        const bodyMatch = content.match(/<body>([\s\S]*)<\/body>/);
+        if (bodyMatch && bodyMatch[1]) {
+          return bodyMatch[1];
+        }
+      } catch (e) {
+        // Try next path
+        continue;
+      }
     }
   } catch (error) {
     console.error('Error reading product template:', error);
