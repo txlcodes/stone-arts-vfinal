@@ -1623,11 +1623,17 @@
             hoverImageUrl = hoverInstallationImage.url;
           }
         }
+        // Prioritize hover_image if it's different from mainImage
+        if (!hoverImageUrl && product.hover_image && product.hover_image !== mainImageUrl) {
+          hoverImageUrl = product.hover_image;
+        }
+        // Then check hover_image_installation
         if (!hoverImageUrl && product.hover_image_installation && product.hover_image_installation !== mainImageUrl) {
           hoverImageUrl = product.hover_image_installation;
         }
+        // Last fallback
         if (!hoverImageUrl) {
-          hoverImageUrl = product.hover_image || mainImageUrl;
+          hoverImageUrl = mainImageUrl;
         }
         
         // PATTERN: Use stone description (detailed), not product description
