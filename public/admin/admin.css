@@ -1202,3 +1202,148 @@ body.admin-panel {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ============================================
+   IMAGE UPLOAD COMPONENTS
+   ============================================ */
+
+.admin-image-upload-wrapper {
+  margin-bottom: var(--admin-spacing-md);
+}
+
+.admin-btn-upload-toggle {
+  padding: 0.5rem 1rem;
+  background: var(--admin-gray-100);
+  border: 2px solid var(--admin-gray-200);
+  border-radius: var(--admin-radius-md);
+  font-size: var(--admin-font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--admin-transition-base);
+  color: var(--admin-gray-600);
+  font-family: inherit;
+}
+
+.admin-btn-upload-toggle:hover {
+  background: var(--admin-gray-200);
+  border-color: var(--admin-gray-300);
+}
+
+.admin-btn-upload-toggle.active {
+  background: var(--admin-primary);
+  color: white;
+  border-color: var(--admin-primary);
+}
+
+.admin-upload-mode {
+  margin-top: var(--admin-spacing-sm);
+}
+
+.admin-upload-zone {
+  border: 2px dashed var(--admin-gray-300);
+  border-radius: var(--admin-radius-md);
+  padding: var(--admin-spacing-xl);
+  text-align: center;
+  background: var(--admin-gray-50);
+  transition: all var(--admin-transition-base);
+  cursor: pointer;
+  position: relative;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-upload-zone:hover {
+  border-color: var(--admin-primary);
+  background: var(--admin-gray-100);
+}
+
+.admin-upload-zone.drag-over {
+  border-color: var(--admin-primary);
+  background: rgba(13, 13, 13, 0.05);
+  transform: scale(1.02);
+}
+
+.admin-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--admin-spacing-sm);
+  pointer-events: none;
+}
+
+.admin-upload-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--admin-spacing-md);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0 0 var(--admin-radius-md) var(--admin-radius-md);
+}
+
+.admin-upload-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--admin-gray-200);
+  border-radius: var(--admin-radius-full);
+  overflow: hidden;
+  margin-bottom: var(--admin-spacing-xs);
+}
+
+.admin-upload-progress-bar::after {
+  content: '';
+  display: block;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--admin-primary) 0%, var(--admin-accent) 100%);
+  animation: progress 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.admin-upload-progress-text {
+  font-size: var(--admin-font-size-xs);
+  color: var(--admin-gray-600);
+  text-align: center;
+}
+
+.admin-image-preview-container {
+  margin-top: var(--admin-spacing-md);
+}
+
+.admin-image-preview-temp {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: var(--admin-radius-md);
+  border: 2px solid var(--admin-gray-200);
+  margin-top: var(--admin-spacing-sm);
+}
+
+.admin-image-preview-existing {
+  margin-top: var(--admin-spacing-sm);
+}
+
+.admin-image-preview-existing img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: var(--admin-radius-md);
+  border: 2px solid var(--admin-gray-200);
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .admin-upload-zone {
+    min-height: 120px;
+    padding: var(--admin-spacing-lg);
+  }
+  
+  .admin-btn-upload-toggle {
+    font-size: var(--admin-font-size-xs);
+    padding: 0.4rem 0.8rem;
+  }
+}

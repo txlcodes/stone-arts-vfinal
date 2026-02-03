@@ -782,56 +782,32 @@
             <div class="admin-form-row">
               <div class="admin-form-group admin-form-group-full">
                 <label class="admin-form-label">Main Image *</label>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="admin-text-small admin-text-muted">
-                    💡 Primary product image - Enter either: <strong>URL</strong> (https://...) or <strong>Local Path</strong> (images/filename.webp)
-                    <br>This is the main image displayed in product cards and galleries.
-                  </span>
-                </div>
-                <input type="text" name="mainImage" class="admin-form-input" value="${escapeHtml(product.mainImage || '')}" placeholder="https://cdn... OR images/Brush_Block.webp" required>
+                ${createImageUploadField('mainImage', product.mainImage || '', true, '💡 Primary product image displayed in product cards and galleries.')}
               </div>
             </div>
             <div class="admin-form-row">
               <div class="admin-form-group">
                 <label class="admin-form-label">Special Image</label>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="admin-text-small admin-text-muted">URL or images/filename.webp</span>
-                </div>
-                <input type="text" name="special_image" class="admin-form-input" value="${escapeHtml(product.special_image || '')}" placeholder="https://... OR images/...">
+                ${createImageUploadField('special_image', product.special_image || '', false, 'Optional special image')}
               </div>
               <div class="admin-form-group">
                 <label class="admin-form-label">Special Image 2</label>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="admin-text-small admin-text-muted">URL or images/filename.webp</span>
-                </div>
-                <input type="text" name="special_image_2" class="admin-form-input" value="${escapeHtml(product.special_image_2 || '')}" placeholder="https://... OR images/...">
+                ${createImageUploadField('special_image_2', product.special_image_2 || '', false, 'Optional second special image')}
               </div>
             </div>
             <div class="admin-form-row">
               <div class="admin-form-group">
                 <label class="admin-form-label">Hover Image</label>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="admin-text-small admin-text-muted">URL or images/filename.webp</span>
-                </div>
-                <input type="text" name="hover_image" class="admin-form-input" value="${escapeHtml(product.hover_image || '')}" placeholder="https://... OR images/...">
+                ${createImageUploadField('hover_image', product.hover_image || '', false, 'Image shown on hover')}
               </div>
               <div class="admin-form-group">
                 <label class="admin-form-label">Hover Installation Image</label>
-                <div style="margin-bottom: 0.5rem;">
-                  <span class="admin-text-small admin-text-muted">URL or images/filename.webp</span>
-                </div>
-                <input type="text" name="hover_image_installation" class="admin-form-input" value="${escapeHtml(product.hover_image_installation || '')}" placeholder="https://... OR images/...">
+                ${createImageUploadField('hover_image_installation', product.hover_image_installation || '', false, 'Installation image shown on hover')}
               </div>
             </div>
             <div class="admin-form-group admin-form-group-full">
               <label class="admin-form-label">Selection Slider Image *</label>
-              <div style="margin-bottom: 0.5rem;">
-                <span class="admin-text-small admin-text-muted">
-                  💡 This image appears in the variant selector slider (showing all product variants). 
-                  <br>URL or images/filename.webp - Should be a small thumbnail (95px width recommended)
-                </span>
-              </div>
-              <input type="text" name="selection_slider_image" class="admin-form-input" value="${escapeHtml(product.selection_slider_image || '')}" placeholder="https://... OR images/..." required>
+              ${createImageUploadField('selection_slider_image', product.selection_slider_image || '', true, '💡 Image for variant selector slider (95px width recommended)')}
             </div>
 
             <!-- Image Gallery -->
@@ -847,7 +823,7 @@
               <div id="imageGalleryList" class="admin-image-list">
                 ${renderImageGallery(product.images || [])}
               </div>
-              <button type="button" class="admin-btn-secondary admin-mt-2" onclick="AdminPanel.addImageToGallery()">➕ Add Image</button>
+              <button type="button" class="admin-btn-secondary admin-mt-2" onclick="AdminPanel.addImageToGallery()">➕ Add Image (Upload or URL)</button>
             </div>
           </div>
           
@@ -977,6 +953,16 @@
     `;
 
     modal.classList.add('show');
+    
+    // Setup image upload handlers after form is rendered
+    setTimeout(() => {
+      setupImageUploadHandlers('mainImage');
+      setupImageUploadHandlers('special_image');
+      setupImageUploadHandlers('special_image_2');
+      setupImageUploadHandlers('hover_image');
+      setupImageUploadHandlers('hover_image_installation');
+      setupImageUploadHandlers('selection_slider_image');
+    }, 100);
   }
 
   /**
@@ -1000,54 +986,375 @@
   }
 
   /**
+   * Upload image file to server
+   * @param {File} file - File to upload
+   * @returns {Promise<Object>} Upload result with path
+   */
+  async function uploadImageFile(file) {
+    try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Invalid file type. Allowed: ${allowedTypes.join(', ')}`);
+      }
+
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new Error(`File too large. Maximum size: ${maxSize / 1024 / 1024}MB`);
+      }
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to API
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Show image preview before upload
+   * @param {File} file - File to preview
+   * @param {HTMLElement} container - Container to show preview in
+   */
+  function showImagePreview(file, container) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.maxWidth = '200px';
+      img.style.maxHeight = '200px';
+      img.style.borderRadius = '4px';
+      img.style.marginTop = '8px';
+      
+      // Clear existing preview
+      const existingPreview = container.querySelector('.admin-image-preview-temp');
+      if (existingPreview) existingPreview.remove();
+      
+      img.className = 'admin-image-preview-temp';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Handle image upload error
+   * @param {Error} error - Error object
+   */
+  function handleImageUploadError(error) {
+    const message = error.message || 'Failed to upload image';
+    showNotification(message, 'error');
+    console.error('Image upload error:', error);
+  }
+
+  /**
+   * Create image upload component HTML
+   * @param {string} fieldName - Form field name
+   * @param {string} currentValue - Current field value
+   * @param {boolean} required - Is field required
+   * @param {string} helpText - Help text to display
+   * @returns {string} HTML string
+   */
+  function createImageUploadField(fieldName, currentValue, required = false, helpText = '') {
+    const fieldId = `upload-${fieldName}`;
+    const inputId = `input-${fieldName}`;
+    const previewId = `preview-${fieldName}`;
+    const toggleId = `toggle-${fieldName}`;
+    
+    return `
+      <div class="admin-image-upload-wrapper" data-field="${fieldName}">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button type="button" class="admin-btn-upload-toggle ${currentValue ? '' : 'active'}" data-toggle="upload" data-field="${fieldName}" id="${toggleId}-upload">
+            📤 Upload File
+          </button>
+          <button type="button" class="admin-btn-upload-toggle ${currentValue ? 'active' : ''}" data-toggle="url" data-field="${fieldName}" id="${toggleId}-url">
+            🔗 Enter URL
+          </button>
+        </div>
+        
+        <div class="admin-upload-mode" data-mode="upload" data-field="${fieldName}" style="${currentValue ? 'display: none;' : ''}">
+          <div class="admin-upload-zone" id="${fieldId}" data-field="${fieldName}">
+            <input type="file" id="${inputId}" accept="image/jpeg,image/jpg,image/png,image/webp,image/svg+xml" style="display: none;" data-field="${fieldName}">
+            <div class="admin-upload-content">
+              <div style="font-size: 48px; margin-bottom: 8px;">📎</div>
+              <div>Drag & drop image here</div>
+              <div style="font-size: 12px; color: #666; margin-top: 4px;">or</div>
+              <button type="button" class="admin-btn-secondary" onclick="document.getElementById('${inputId}').click()">
+                Browse Files
+              </button>
+              <div style="font-size: 11px; color: #999; margin-top: 8px;">Max 10MB • JPG, PNG, WEBP, SVG</div>
+            </div>
+            <div class="admin-upload-progress" style="display: none;">
+              <div class="admin-upload-progress-bar"></div>
+              <div class="admin-upload-progress-text">Uploading...</div>
+            </div>
+          </div>
+          <div class="admin-image-preview-container" id="${previewId}"></div>
+        </div>
+        
+        <div class="admin-upload-mode" data-mode="url" data-field="${fieldName}" style="${currentValue ? '' : 'display: none;'}">
+          <input type="text" name="${fieldName}" class="admin-form-input" value="${escapeHtml(currentValue || '')}" 
+                 placeholder="https://... OR images/..." ${required ? 'required' : ''}>
+          ${currentValue ? `<div class="admin-image-preview-existing"><img src="${getPreviewImageSrc(currentValue)}" alt="Preview" style="max-width: 200px; max-height: 200px; margin-top: 8px; border-radius: 4px;"></div>` : ''}
+        </div>
+        
+        ${helpText ? `<div style="margin-top: 4px;"><span class="admin-text-small admin-text-muted">${helpText}</span></div>` : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Setup image upload handlers for a field
+   * @param {string} fieldName - Form field name
+   */
+  function setupImageUploadHandlers(fieldName) {
+    const fieldId = `upload-${fieldName}`;
+    const inputId = `input-${fieldName}`;
+    const previewId = `preview-${fieldName}`;
+    const toggleId = `toggle-${fieldName}`;
+    
+    const uploadZone = document.getElementById(fieldId);
+    const fileInput = document.getElementById(inputId);
+    const previewContainer = document.getElementById(previewId);
+    const uploadMode = document.querySelector(`[data-mode="upload"][data-field="${fieldName}"]`);
+    const urlMode = document.querySelector(`[data-mode="url"][data-field="${fieldName}"]`);
+    const urlInput = urlMode?.querySelector('input[type="text"]');
+    
+    if (!uploadZone || !fileInput) return;
+
+    // Toggle between upload and URL modes
+    document.querySelectorAll(`[data-toggle][data-field="${fieldName}"]`).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.toggle;
+        document.querySelectorAll(`[data-toggle][data-field="${fieldName}"]`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (mode === 'upload') {
+          uploadMode.style.display = '';
+          urlMode.style.display = 'none';
+        } else {
+          uploadMode.style.display = 'none';
+          urlMode.style.display = '';
+        }
+      });
+    });
+
+    // File input change
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      await handleFileUpload(file, fieldName, previewContainer, urlInput);
+    });
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('drag-over');
+    });
+
+    uploadZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      
+      await handleFileUpload(file, fieldName, previewContainer, urlInput);
+    });
+  }
+
+  /**
+   * Handle file upload
+   * @param {File} file - File to upload
+   * @param {string} fieldName - Field name
+   * @param {HTMLElement} previewContainer - Preview container
+   * @param {HTMLElement} urlInput - URL input field
+   */
+  async function handleFileUpload(file, fieldName, previewContainer, urlInput) {
+    const uploadZone = document.getElementById(`upload-${fieldName}`);
+    const progressBar = uploadZone?.querySelector('.admin-upload-progress');
+    const progressText = uploadZone?.querySelector('.admin-upload-progress-text');
+    
+    try {
+      // Show preview
+      showImagePreview(file, previewContainer);
+      
+      // Show progress
+      if (progressBar) progressBar.style.display = 'block';
+      if (progressText) progressText.textContent = 'Uploading...';
+      
+      // Upload file
+      const result = await uploadImageFile(file);
+      
+      // Update form field
+      if (urlInput) {
+        urlInput.value = result.path;
+        
+        // Switch to URL mode and show preview
+        const toggleBtn = document.querySelector(`[data-toggle="url"][data-field="${fieldName}"]`);
+        if (toggleBtn) toggleBtn.click();
+        
+        // Update preview in URL mode
+        const urlMode = document.querySelector(`[data-mode="url"][data-field="${fieldName}"]`);
+        if (urlMode) {
+          const existingPreview = urlMode.querySelector('.admin-image-preview-existing');
+          if (existingPreview) existingPreview.remove();
+          
+          const previewDiv = document.createElement('div');
+          previewDiv.className = 'admin-image-preview-existing';
+          previewDiv.innerHTML = `<img src="${result.path}" alt="Preview" style="max-width: 200px; max-height: 200px; margin-top: 8px; border-radius: 4px;">`;
+          urlMode.appendChild(previewDiv);
+        }
+      }
+      
+      // Hide progress
+      if (progressBar) progressBar.style.display = 'none';
+      if (progressText) progressText.textContent = 'Upload complete!';
+      
+      showNotification('Image uploaded successfully!', 'success');
+      
+      // Clear file input
+      const fileInput = document.getElementById(`input-${fieldName}`);
+      if (fileInput) fileInput.value = '';
+      
+    } catch (error) {
+      handleImageUploadError(error);
+      if (progressBar) progressBar.style.display = 'none';
+      const tempPreview = previewContainer.querySelector('.admin-image-preview-temp');
+      if (tempPreview) tempPreview.remove();
+    }
+  }
+
+  /**
    * Add image to gallery
    */
   AdminPanel.addImageToGallery = function() {
-    const url = prompt('Enter image URL or local path (e.g., https://... OR images/filename.webp):');
-    if (!url) return;
+    // Create file input for gallery
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/jpg,image/png,image/webp,image/svg+xml';
+    input.style.display = 'none';
     
-    // Normalize the path
-    const normalizedUrl = normalizeImagePath(url);
-
-    const type = prompt('Enter image type (panel, installation, stone, closeup):', 'panel');
-    const sortOrderInput = prompt('Enter sort order:', '1');
-    const sortOrder = parseInt(sortOrderInput) || 1;
-
-    const form = document.getElementById('productForm');
-    if (!form) return;
-
-    // Get current images from hidden input
-    let images = [];
-    const imagesInput = form.querySelector('[name="images"]');
-    if (imagesInput && imagesInput.value) {
+    input.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
       try {
-        images = JSON.parse(imagesInput.value);
-      } catch (e) {
-        console.error('Error parsing images:', e);
-        images = [];
+        // Upload file
+        const result = await uploadImageFile(file);
+        
+        // Get image type and sort order
+        const type = prompt('Enter image type (panel, installation, stone, closeup):', 'panel') || 'panel';
+        const sortOrderInput = prompt('Enter sort order:', '1');
+        const sortOrder = parseInt(sortOrderInput) || 1;
+        
+        // Add to gallery
+        const form = document.getElementById('productForm');
+        if (!form) return;
+
+        let images = [];
+        const imagesInput = form.querySelector('[name="images"]');
+        if (imagesInput && imagesInput.value) {
+          try {
+            images = JSON.parse(imagesInput.value);
+          } catch (e) {
+            console.error('Error parsing images:', e);
+            images = [];
+          }
+        }
+
+        images.push({
+          url: result.path,
+          type: type.trim(),
+          sort_order: sortOrder
+        });
+
+        images.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        if (imagesInput) {
+          imagesInput.value = JSON.stringify(images);
+        }
+
+        const galleryList = document.getElementById('imageGalleryList');
+        if (galleryList) {
+          galleryList.innerHTML = renderImageGallery(images);
+        }
+        
+        showNotification('Image added to gallery!', 'success');
+      } catch (error) {
+        handleImageUploadError(error);
       }
-    }
-
-    // Add new image with normalized path
-    images.push({
-      url: normalizeImagePath(url.trim()),
-      type: (type || 'panel').trim(),
-      sort_order: sortOrder
+      
+      // Cleanup
+      document.body.removeChild(input);
     });
+    
+    document.body.appendChild(input);
+    input.click();
+    
+    // Fallback to prompt method
+    setTimeout(() => {
+      if (!input.value) {
+        const url = prompt('Enter image URL or local path (e.g., https://... OR images/filename.webp):');
+        if (!url) return;
+        
+        const normalizedUrl = normalizeImagePath(url);
+        const type = prompt('Enter image type (panel, installation, stone, closeup):', 'panel') || 'panel';
+        const sortOrderInput = prompt('Enter sort order:', '1');
+        const sortOrder = parseInt(sortOrderInput) || 1;
 
-    // Sort by sort_order
-    images.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        const form = document.getElementById('productForm');
+        if (!form) return;
 
-    // Update hidden input
-    if (imagesInput) {
-      imagesInput.value = JSON.stringify(images);
-    }
+        let images = [];
+        const imagesInput = form.querySelector('[name="images"]');
+        if (imagesInput && imagesInput.value) {
+          try {
+            images = JSON.parse(imagesInput.value);
+          } catch (e) {
+            console.error('Error parsing images:', e);
+            images = [];
+          }
+        }
 
-    // Update gallery display
-    const galleryList = document.getElementById('imageGalleryList');
-    if (galleryList) {
-      galleryList.innerHTML = renderImageGallery(images);
-    }
+        images.push({
+          url: normalizeImagePath(url.trim()),
+          type: (type || 'panel').trim(),
+          sort_order: sortOrder
+        });
+
+        images.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        if (imagesInput) {
+          imagesInput.value = JSON.stringify(images);
+        }
+
+        const galleryList = document.getElementById('imageGalleryList');
+        if (galleryList) {
+          galleryList.innerHTML = renderImageGallery(images);
+        }
+      }
+    }, 100);
   };
 
   /**
@@ -1271,20 +1578,35 @@
 
     // Save to localStorage
     if (window.AdminDataManager.saveCMSData(AdminPanel.cmsData)) {
-      // Auto-sync to database
+      // Try to sync to database (optional, fails gracefully)
       window.AdminDataManager.syncToServer(AdminPanel.cmsData)
         .then(result => {
-          console.log('Product synced to database:', result);
           const validation = validateProductPattern(productData);
-          let message = `Product saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`;
+          if (result && result.results) {
+            // Database sync succeeded
+            let message = `Product saved and synced to database (${result.results.created > 0 ? 'Created' : 'Updated'})`;
+            if (validation.warnings.length > 0) {
+              message += `\n⚠️ Warnings: ${validation.warnings.join('; ')}`;
+            }
+            showNotification(message, validation.warnings.length > 0 ? 'warning' : 'success');
+          } else {
+            // Database unavailable - localStorage save succeeded (this is OK)
+            let message = 'Product saved successfully (localStorage)';
+            if (validation.warnings.length > 0) {
+              message += `\n⚠️ Warnings: ${validation.warnings.join('; ')}`;
+            }
+            showNotification(message, validation.warnings.length > 0 ? 'warning' : 'success');
+          }
+        })
+        .catch(error => {
+          // Sync failed but localStorage save succeeded - show success message
+          const validation = validateProductPattern(productData);
+          let message = 'Product saved successfully (localStorage)';
           if (validation.warnings.length > 0) {
             message += `\n⚠️ Warnings: ${validation.warnings.join('; ')}`;
           }
           showNotification(message, validation.warnings.length > 0 ? 'warning' : 'success');
-        })
-        .catch(error => {
-          console.error('Failed to sync to database:', error);
-          showNotification('Product saved locally, but failed to sync to database. Check console.', 'warning');
+          console.log('Note: Database sync unavailable - products saved to localStorage only.');
         });
       
       AdminPanel.closeModal();

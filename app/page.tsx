@@ -328,7 +328,7 @@ export default function HomePage() {
                                 <div>Pay with browser.</div>
                               </a>
                             </div>
-                            <a href="/customer-type-selection" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">To the checkout</a>
+                            <a href="/quotation" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">To the checkout</a>
                             <a bind="22afc99a-d9af-463e-59bf-fb110f1b56f3" href="/cart" class="einkaufswagen-button w-button">Zum Einkaufswagen</a>
                           </div>
                         </div>
@@ -428,7 +428,7 @@ export default function HomePage() {
                                   <div>Pay with browser.</div>
                                 </a>
                               </div>
-                              <a href="/customer-type-selection" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb8c" class="w-commerce-commercecartcheckoutbutton checkout-button-3" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">Continue to Checkout</a>
+                              <a href="/quotation" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb8c" class="w-commerce-commercecartcheckoutbutton checkout-button-3" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">Continue to Checkout</a>
                               <a bind="228b8eef-42c0-792b-692e-59e3ee23df8e" href="/cart" class="einkaufswagen-button w-button">Zum Einkaufswagen</a>
                             </div>
                           </div>

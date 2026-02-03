@@ -238,14 +238,15 @@
     },
 
     /**
-     * Sync products to server (database)
+     * Sync products to server (database) - Optional, fails gracefully if database unavailable
      * @param {Object} data - CMS data object with products array
-     * @returns {Promise<Object>} Sync result with created/updated counts
+     * @returns {Promise<Object>} Sync result with created/updated counts, or null if database unavailable
      */
     syncToServer: async function(data) {
       try {
         if (!data || !data.products || !Array.isArray(data.products)) {
-          throw new Error('Invalid data: products array is required');
+          console.warn('AdminDataManager: Invalid data for sync - skipping database sync');
+          return null;
         }
 
         const response = await fetch('/api/admin/sync-products', {
@@ -257,8 +258,15 @@
         });
 
         if (!response.ok) {
+          // Check if it's a database connection error (500) or not found (404)
+          if (response.status === 500 || response.status === 404) {
+            console.warn('AdminDataManager: Database unavailable - continuing without sync. Products saved to localStorage only.');
+            return null;
+          }
+          
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Server error: ${response.statusText}`);
+          console.warn('AdminDataManager: Sync failed -', errorData.message || response.statusText, '- Products saved to localStorage only.');
+          return null;
         }
 
         const result = await response.json();
@@ -269,8 +277,9 @@
         
         return result;
       } catch (error) {
-        console.error('AdminDataManager: Error syncing to server:', error);
-        throw error;
+        // Network errors or other issues - fail gracefully
+        console.warn('AdminDataManager: Database sync unavailable -', error.message, '- Products saved to localStorage only.');
+        return null;
       }
     },
 
@@ -278,24 +287,33 @@
      * Save CMS data and optionally sync to server
      * @param {Object} data - CMS data object to save
      * @param {boolean} syncToServer - Whether to sync to server after saving locally
-     * @returns {Promise<boolean>} Success status
+     * @returns {Promise<boolean>} Success status (always true if localStorage save succeeds, even if sync fails)
      */
     saveCMSDataAndSync: async function(data, syncToServer = false) {
       try {
-        // Save to localStorage first
+        // Save to localStorage first (this is the primary storage)
         const saved = this.saveCMSData(data);
         if (!saved) {
           throw new Error('Failed to save to localStorage');
         }
 
-        // Optionally sync to server
+        // Optionally sync to server (non-blocking, fails gracefully)
         if (syncToServer) {
-          await this.syncToServer(data);
+          try {
+            const syncResult = await this.syncToServer(data);
+            if (syncResult === null) {
+              // Database unavailable - this is OK, localStorage is the source of truth
+              console.log('AdminDataManager: Data saved to localStorage. Database sync skipped (database unavailable).');
+            }
+          } catch (syncError) {
+            // Sync failed but localStorage save succeeded - this is acceptable
+            console.warn('AdminDataManager: Data saved to localStorage. Database sync failed (non-critical):', syncError.message);
+          }
         }
 
         return true;
       } catch (error) {
-        console.error('AdminDataManager: Error saving and syncing:', error);
+        console.error('AdminDataManager: Error saving data:', error);
         throw error;
       }
     }

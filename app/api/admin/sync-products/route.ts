@@ -1,8 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+
+// Try to import prisma, but handle gracefully if database unavailable
+let prisma: any = null;
+try {
+  // Check if DATABASE_URL is set (database configured)
+  if (process.env.DATABASE_URL) {
+    const prismaModule = require('@/lib/prisma');
+    prisma = prismaModule.prisma;
+  } else {
+    console.log('DATABASE_URL not set - database sync disabled');
+  }
+} catch (error) {
+  console.warn('Prisma not available - database sync disabled:', error);
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!prisma) {
+      return NextResponse.json(
+        { 
+          error: 'Database unavailable', 
+          message: 'Database connection not configured. Products saved to localStorage only.',
+          results: { created: 0, updated: 0, errors: [] }
+        },
+        { status: 503 } // Service Unavailable
+      );
+    }
+
     const body = await request.json();
     const { products } = body;
 
@@ -80,6 +105,19 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error: any) {
+    // Check if it's a database connection error
+    if (error.message?.includes('Prisma') || error.message?.includes('database') || error.message?.includes('connect')) {
+      console.warn('Database connection error - sync unavailable');
+      return NextResponse.json(
+        { 
+          error: 'Database unavailable', 
+          message: 'Database connection failed. Products saved to localStorage only.',
+          results: { created: 0, updated: 0, errors: [] }
+        },
+        { status: 503 }
+      );
+    }
+    
     console.error('Error in sync-products API:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
@@ -90,11 +128,36 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    // Check if database is available
+    if (!prisma) {
+      return NextResponse.json(
+        { 
+          error: 'Database unavailable', 
+          message: 'Database connection not configured.',
+          products: []
+        },
+        { status: 503 }
+      );
+    }
+
     const products = await prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ products });
   } catch (error: any) {
+    // Check if it's a database connection error
+    if (error.message?.includes('Prisma') || error.message?.includes('database') || error.message?.includes('connect')) {
+      console.warn('Database connection error - fetch unavailable');
+      return NextResponse.json(
+        { 
+          error: 'Database unavailable', 
+          message: 'Database connection failed.',
+          products: []
+        },
+        { status: 503 }
+      );
+    }
+    
     console.error('Error fetching products:', error);
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
