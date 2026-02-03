@@ -252,7 +252,7 @@ export default function HomePage() {
             </nav>
           </div>
           <div class="nav-center">
-            <a href="/index" aria-current="page" class="nav-logo-link w-inline-block w--current"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
+            <a href="/" aria-current="page" class="nav-logo-link w-inline-block w--current"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
           </div>
           <div class="nav-right">
             <nav role="navigation" class="nav-menu _2 w-nav-menu">
@@ -363,7 +363,7 @@ export default function HomePage() {
               <div data-w-id="4bc36725-f958-4612-d2cb-e90fd749bb59" data-is-ix2-target="1" data-animation-type="lottie" data-src="/documents/animation_lmqenqw5.json" data-loop="0" data-direction="1" data-autoplay="0" data-renderer="svg" data-default-duration="2" data-duration="0" data-ix2-initial-state="0"></div>
             </div>
             <div class="nav-center">
-              <a href="/index" aria-current="page" class="nav-logo-link w-inline-block w--current"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
+              <a href="/" aria-current="page" class="nav-logo-link w-inline-block w--current"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
             </div>
             <div class="nav-right">
               <div class="button-wrapper-menu div-block-663 div-block-664 div-block-665">
