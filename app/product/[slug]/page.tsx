@@ -1,34 +1,56 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-// Read product page HTML template at build time
+// Read product page HTML template dynamically (not cached at module level)
 function getProductPageHTML(): string {
   try {
-    // Try multiple possible paths
+    // Try multiple possible paths for detail_product.html
+    // Priority: public directory first (most reliable), then relative paths
     const possiblePaths = [
-      join(process.cwd(), '../stoneartscrm/detail_product.html'),
       join(process.cwd(), 'public/detail_product_template.html'),
+      join(process.cwd(), '../stoneartscrm/detail_product.html'),
       join(process.cwd(), '../../stoneartscrm/detail_product.html'),
     ];
     
     for (const htmlPath of possiblePaths) {
       try {
+        if (!existsSync(htmlPath)) {
+          console.log(`⚠️ Template not found at: ${htmlPath}`);
+          continue;
+        }
         const content = readFileSync(htmlPath, 'utf-8');
         // Extract body content (everything between <body> and </body>)
-        const bodyMatch = content.match(/<body>([\s\S]*)<\/body>/);
+        // Handle both <body> and <body ...attributes...>
+        // Use greedy match to get everything between first <body> and last </body>
+        const bodyMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
         if (bodyMatch && bodyMatch[1]) {
-          return bodyMatch[1];
+          const bodyContent = bodyMatch[1].trim();
+          console.log(`✅ Successfully loaded product template from: ${htmlPath}`);
+          console.log(`📏 Template size: ${(bodyContent.length / 1024).toFixed(2)} KB`);
+          // Verify the template has the required bind attribute for populate-cms.js
+          if (bodyContent.includes('bind="44360311-a628-3bd3-7fc8-c24734f06683"')) {
+            console.log(`✅ Template contains required product page bind attribute`);
+            return bodyContent;
+          } else {
+            console.warn(`⚠️ Template loaded but missing required bind attribute`);
+            return bodyContent; // Still return it, populate-cms.js will handle it
+          }
+        } else {
+          console.warn(`⚠️ Could not extract body content from: ${htmlPath}`);
         }
-      } catch (e) {
+      } catch (e: any) {
+        console.error(`❌ Error reading ${htmlPath}:`, e.message);
         // Try next path
         continue;
       }
     }
-  } catch (error) {
-    console.error('Error reading product template:', error);
+  } catch (error: any) {
+    console.error('❌ Error reading product template:', error.message);
   }
   
-  // Fallback: return basic structure that populate-cms.js will populate
+  // Fallback: return the complete structure from reference (extracted from user's HTML)
+  // This matches the reference site structure exactly
+  console.warn('⚠️ Using fallback product page template - detail_product.html not found');
   return `
     <div class="page_wrap">
       <div id="Main" bind="38729aa6-c37b-e52a-f697-d836bba6154a" class="w-embed">
@@ -72,12 +94,14 @@ function getProductPageHTML(): string {
   `;
 }
 
-// Cache the HTML at module level (loaded once at build/startup)
-const productPageHTML = getProductPageHTML();
-
 export default function ProductPage({ params }: { params: { slug: string } }) {
+  // Read HTML dynamically on each request (not cached at module level)
+  // This ensures changes to detail_product.html are reflected immediately
+  const productPageHTML = getProductPageHTML();
+  
   // The slug is available but populate-cms.js will read it from the URL
   // This page serves the HTML template, and populate-cms.js populates it
+  // The complete HTML structure from detail_product.html is loaded here
   
   return (
     <div dangerouslySetInnerHTML={{ __html: productPageHTML }} />

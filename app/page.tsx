@@ -270,12 +270,12 @@ export default function HomePage() {
               <div class="account-wrapper"><img src="/images/person-outline-2.svg" loading="lazy" alt="" class="image-121"></div>
               <div bind="4bc36725-f958-4612-d2cb-e90fd749bb24" data-open-product="" data-wf-cart-type="rightSidebar" data-wf-cart-query="" data-wf-page-link-href-prefix="" class="w-commerce-commercecartwrapper cart" data-node-type="commerce-cart-wrapper">
                 <a bind="4bc36725-f958-4612-d2cb-e90fd749bb25" class="w-commerce-commercecartopenlink cart-button-3 w-inline-block" role="button" aria-haspopup="dialog" aria-label="Open cart" data-node-type="commerce-cart-open-link" href="#">
-                  <div bind="4bc36725-f958-4612-d2cb-e90fd749bb26" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline-1.svg" loading="lazy" alt="" class="image-122">
+                  <div bind="4bc36725-f958-4612-d2cb-e90fd749bb26" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline.svg" loading="lazy" alt="" class="image-122">
                 </a>
                 <div bind="4bc36725-f958-4612-d2cb-e90fd749bb28" style="display:none" class="w-commerce-commercecartcontainerwrapper w-commerce-commercecartcontainerwrapper--cartType-rightSidebar" data-node-type="commerce-cart-container-wrapper">
                   <div bind="4bc36725-f958-4612-d2cb-e90fd749bb29" data-node-type="commerce-cart-container" role="dialog" class="w-commerce-commercecartcontainer cart-container-2">
                     <div bind="4bc36725-f958-4612-d2cb-e90fd749bb2a" class="w-commerce-commercecartheader">
-                      <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb2b" class="w-commerce-commercecartheading heading-253">Your shopping cart</h4>
+                      <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb2b" class="w-commerce-commercecartheading heading-253"><img src="/images/bag-outline.svg" alt="Shopping cart" style="width: 24px; height: 24px;" /></h4>
                       <a bind="4bc36725-f958-4612-d2cb-e90fd749bb2d" class="w-commerce-commercecartcloselink w-inline-block" role="button" aria-label="Close cart" data-node-type="commerce-cart-close-link"><svg class="icon-12" width="16px" height="16px" viewbox="0 0 16 16">
                           <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                             <g fill-rule="nonzero" fill="#333333">
@@ -290,7 +290,7 @@ export default function HomePage() {
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb31" template-bind="4bc36725-f958-4612-d2cb-e90fd749bb31" class="w-commerce-commercecartlist" data-wf-collection="database.commerceOrder.userItems" data-wf-template-id="wf-template-4bc36725-f958-4612-d2cb-e90fd749bb31"></div>
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb41" class="w-commerce-commercecartfooter">
                           <div aria-atomic="true" aria-live="polite" bind="4bc36725-f958-4612-d2cb-e90fd749bb42" class="w-commerce-commercecartlineitem">
-                            <div class="text-block-107">Total</div>
+                            <div class="text-block-107">In total</div>
                             <div bind="4bc36725-f958-4612-d2cb-e90fd749bb45" class="w-commerce-commercecartordervalue text-block-124"></div>
                           </div>
                           <div bind="4bc36725-f958-4612-d2cb-e90fd749bb46">
@@ -328,13 +328,22 @@ export default function HomePage() {
                                 <div>Pay with browser.</div>
                               </a>
                             </div>
-                            <a href="/customer-type-selection" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">Continue to Checkout</a>
+                            <a href="/customer-type-selection" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">To the checkout</a>
                             <a bind="22afc99a-d9af-463e-59bf-fb110f1b56f3" href="/cart" class="einkaufswagen-button w-button">Zum Einkaufswagen</a>
                           </div>
                         </div>
                       </form>
                       <div bind="4bc36725-f958-4612-d2cb-e90fd749bb50" class="w-commerce-commercecartemptystate">
-                        <div aria-label="This cart is empty" aria-live="polite" class="text-block-110">Your cart is empty.</div>
+                        <div class="empty-cart-content">
+                          <div class="empty-cart-icon">
+                            <img src="/images/bag-outline.svg" alt="Shopping bag" style="width: 64px; height: 64px; opacity: 0.3;">
+                          </div>
+                          <div aria-label="This cart is empty" aria-live="polite" class="text-block-110 empty-cart-message">Your cart is empty</div>
+                          <p class="empty-cart-subtitle">Add items to your cart to continue shopping</p>
+                          <a href="/" class="empty-cart-button button-outline-black w-inline-block">
+                            <div class="button-text">Continue Shopping</div>
+                          </a>
+                        </div>
                       </div>
                       <div aria-live="assertive" bind="4bc36725-f958-4612-d2cb-e90fd749bb53" style="display:none" data-node-type="commerce-cart-error" class="w-commerce-commercecarterrorstate">
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb54" class="error-message w-cart-error-msg" data-w-cart-quantity-error="Die angefragte Menge überschreitet die Verfügbarkeit." data-w-cart-general-error="Ups, irgendwas scheint schiefgelaufen zu sein." data-w-cart-checkout-error="Checkout ist auf dieser Seite deaktiviert." data-w-cart-cart_order_min-error="Mindestbestellwert nicht erreicht. Fügen Sie weitere Artikel hinzu." data-w-cart-subscription_error-error="Bitte bestätigen Sie vor dem Kauf Ihre Adresse per E-Mail-Einladung für Bestellupdates.">Die angefragte Menge überschreitet die Verfügbarkeit.</div>
@@ -361,12 +370,12 @@ export default function HomePage() {
                 <div class="account-wrapper"><img src="/images/person-outline-2.svg" loading="lazy" alt="" class="image-121"></div>
                 <div bind="4bc36725-f958-4612-d2cb-e90fd749bb61" data-open-product="" data-wf-cart-type="rightSidebar" data-wf-cart-query="" data-wf-page-link-href-prefix="" data-wf-cart-easing="ease-out-quart" data-wf-cart-duration="500" class="w-commerce-commercecartwrapper" data-node-type="commerce-cart-wrapper">
                   <a bind="4bc36725-f958-4612-d2cb-e90fd749bb62" class="w-commerce-commercecartopenlink cart-button-3 w-inline-block" role="button" aria-haspopup="dialog" aria-label="Open cart" data-node-type="commerce-cart-open-link" href="#">
-                    <div bind="4bc36725-f958-4612-d2cb-e90fd749bb63" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline-1.svg" loading="lazy" alt="" class="image-122">
+                    <div bind="4bc36725-f958-4612-d2cb-e90fd749bb63" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline.svg" loading="lazy" alt="" class="image-122">
                   </a>
                   <div bind="4bc36725-f958-4612-d2cb-e90fd749bb65" style="display:none" class="w-commerce-commercecartcontainerwrapper w-commerce-commercecartcontainerwrapper--cartType-rightSidebar" data-node-type="commerce-cart-container-wrapper">
                     <div bind="4bc36725-f958-4612-d2cb-e90fd749bb66" data-node-type="commerce-cart-container" role="dialog" class="w-commerce-commercecartcontainer cart-container-3">
                       <div bind="4bc36725-f958-4612-d2cb-e90fd749bb67" class="w-commerce-commercecartheader">
-                        <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb68" class="w-commerce-commercecartheading heading-254">Your shopping cart</h4>
+                        <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb68" class="w-commerce-commercecartheading heading-254"><img src="/images/bag-outline.svg" alt="Shopping cart" style="width: 24px; height: 24px;" /></h4>
                         <a bind="4bc36725-f958-4612-d2cb-e90fd749bb6a" class="w-commerce-commercecartcloselink w-inline-block" role="button" aria-label="Close cart" data-node-type="commerce-cart-close-link"><svg width="16px" height="16px" viewbox="0 0 16 16">
                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                               <g fill-rule="nonzero" fill="#333333">
@@ -425,7 +434,16 @@ export default function HomePage() {
                           </div>
                         </form>
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb8d" class="w-commerce-commercecartemptystate">
-                          <div aria-label="This cart is empty" aria-live="polite" class="text-block-111">Keine Artikel gefunden.</div>
+                          <div class="empty-cart-content">
+                            <div class="empty-cart-icon">
+                              <img src="/images/bag-outline.svg" alt="Shopping bag" style="width: 64px; height: 64px; opacity: 0.3;">
+                            </div>
+                            <div aria-label="This cart is empty" aria-live="polite" class="text-block-111 empty-cart-message">Your cart is empty</div>
+                            <p class="empty-cart-subtitle">Add items to your cart to continue shopping</p>
+                            <a href="/" class="empty-cart-button button-outline-black w-inline-block">
+                              <div class="button-text">Continue Shopping</div>
+                            </a>
+                          </div>
                         </div>
                         <div aria-live="assertive" bind="4bc36725-f958-4612-d2cb-e90fd749bb90" style="display:none" data-node-type="commerce-cart-error" class="w-commerce-commercecarterrorstate">
                           <div bind="4bc36725-f958-4612-d2cb-e90fd749bb91" class="error-message-2 w-cart-error-msg" data-w-cart-quantity-error="Produkt in dieser Menge nicht verfügbar." data-w-cart-general-error="Fehler beim Hinzufügen zum Warenkorb." data-w-cart-checkout-error="Bestellabschluss deaktiviert." data-w-cart-cart_order_min-error="Mindestbestellwert nicht erreicht. Fügen Sie weitere Artikel hinzu." data-w-cart-subscription_error-error="Bitte bestätigen Sie vor dem Kauf Ihre Adresse per E-Mail-Einladung für Bestellupdates.">Produkt in dieser Menge nicht verfügbar.</div>

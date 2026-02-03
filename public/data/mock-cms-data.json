@@ -18,27 +18,27 @@
       "mainImage": "images/667530dfb4d435589f6b7508_Brush.webp",
       "special_image": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c45aa4067e84ea2efbae_Brush_Paneele.webp",
       "special_image_2": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c465bb2c1f412c8d9dbd_Brush_Stone.webp",
-      "hover_image": "images/667028c7768906f8f39ac7ab_Brush.webp",
-      "hover_image_installation": "images/667028c7768906f8f39ac7ab_Brush.webp",
+      "hover_image": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/667028c7768906f8f39ac7ab_Brush.webp",
+      "hover_image_installation": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/667028c7768906f8f39ac7ab_Brush.webp",
       "selection_slider_image": "images/667530dfb4d435589f6b7508_Brush.webp",
       "images": [
         {
-          "url": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c45aa4067e84ea2efbae_Brush_Paneele.webp",
+          "url": "images/6672c45aa4067e84ea2efbae_Brush_Paneele.webp",
           "type": "panel",
           "sort_order": 1
         },
         {
-          "url": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c4455af0f9d6f7a200f5_Brush_Installation.webp",
+          "url": "images/6672c4455af0f9d6f7a200f5_Brush_Installation.webp",
           "type": "installation",
           "sort_order": 2
         },
         {
-          "url": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c465bb2c1f412c8d9dbd_Brush_Stone.webp",
+          "url": "images/6672c465bb2c1f412c8d9dbd_Brush_Stone.webp",
           "type": "stone",
           "sort_order": 3
         },
         {
-          "url": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c468e1fa66221779db7e_Brush_CloseUp.webp",
+          "url": "images/6672c468e1fa66221779db7e_Brush_CloseUp.webp",
           "type": "closeup",
           "sort_order": 4
         }
@@ -86,15 +86,15 @@
       "price": "€220.00",
       "priceValue": 220.00,
       "currency": "EUR",
-      "mainImage": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6675861ad213c310219f4799_Whisper_Paneel%20(1).jpg",
-      "special_image": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
+      "mainImage": "images/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
+      "special_image": "images/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
       "special_image_2": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672b845e7846b687ecca399_Whisper_Stone.webp",
-      "hover_image": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
+      "hover_image": "images/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
       "hover_image_installation": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672b83e1ccaf75ca6c81da1_Whisper_Installation.webp",
-      "selection_slider_image": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6675861ad213c310219f4799_Whisper_Paneel%20(1).jpg",
+      "selection_slider_image": "images/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
       "images": [
         {
-          "url": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
+          "url": "images/6672b83a8bd67b5b72bbd5fb_Whisper_Paneel.webp",
           "type": "panel",
           "sort_order": 1
         },
@@ -228,15 +228,15 @@
       "price": "€220.00",
       "priceValue": 220.00,
       "currency": "EUR",
-      "mainImage": "images/667530ff3fb596c83de661fc_Gaia.webp",
-      "special_image": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c55b226d47e47784b239_Gaia_Paneele.webp",
+      "mainImage": "images/667530ff3fb596c83de661fc_Gaia.png",
+      "special_image": "images/667530ff3fb596c83de661fc_Gaia.png",
       "special_image_2": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c5618fb534f344983a07_Gaia_Stone.webp",
-      "hover_image": "images/667028eef6662d7537c5ce7c_Gaia.webp",
-      "hover_image_installation": null,
-      "selection_slider_image": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66758644add472dbb9591b07_Gaia_Paneele.jpg",
+      "hover_image": "images/667530ff3fb596c83de661fc_Gaia.png",
+      "hover_image_installation": "images/667028eef6662d7537c5ce7c_Gaia.webp",
+      "selection_slider_image": "images/667530ff3fb596c83de661fc_Gaia.png",
       "images": [
         {
-          "url": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c55b226d47e47784b239_Gaia_Paneele.webp",
+          "url": "images/667530ff3fb596c83de661fc_Gaia.png",
           "type": "panel",
           "sort_order": 1
         },
@@ -249,6 +249,11 @@
           "url": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c5643a3925cdbf0b675b_Gaia_CloseUp.webp",
           "type": "closeup",
           "sort_order": 3
+        },
+        {
+          "url": "images/667028eef6662d7537c5ce7c_Gaia.webp",
+          "type": "installation",
+          "sort_order": 4
         }
       ],
       "color": "hsla(10, 45%, 45%, 0.30)",
@@ -294,12 +299,12 @@
       "price": "€220.00",
       "priceValue": 220.00,
       "currency": "EUR",
-      "mainImage": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66758637bbc7488ba0f322d9_Yami_Paneel.jpg",
+      "mainImage": "images/667530f03d356da1743e6c58_Yami.webp",
       "special_image": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c4a3cc07e459748b16a8_Yami_Paneel.webp",
       "special_image_2": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c50ce1fa6622177a75ca_Yami_Stone.webp",
-      "hover_image": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c4a3cc07e459748b16a8_Yami_Paneel.webp",
-      "hover_image_installation": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c50639174e9162b76f2b_Yami_Installation.webp",
-      "selection_slider_image": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66758637bbc7488ba0f322d9_Yami_Paneel.jpg",
+      "hover_image": "images/667028dee4828849dcfebbed_Obsidian.webp",
+      "hover_image_installation": "images/667028dee4828849dcfebbed_Obsidian.webp",
+      "selection_slider_image": "images/667530f03d356da1743e6c58_Yami.webp",
       "images": [
         {
           "url": "https://uploads-ssl.webflow.com/64ad5017cecbda3ed3e03b0f/6672c4a3cc07e459748b16a8_Yami_Paneel.webp",
@@ -700,7 +705,7 @@
       "price": "€11.49",
       "priceValue": 11.49,
       "currency": "EUR",
-      "mainImage": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66730e1706b3f61341b7ca22_Weisseschrauben.webp",
+      "mainImage": "images/66730e1706b3f61341b7ca22_Weisseschrauben.png",
       "requiresShipping": true,
       "sorting": 2
     },
@@ -717,7 +722,7 @@
       "price": "€11.49",
       "priceValue": 11.49,
       "currency": "EUR",
-      "mainImage": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66730dbc82bb50be94f88c67_Schwarzeschrauben.webp",
+      "mainImage": "images/66730dbc82bb50be94f88c67_Schwarzeschrauben.png",
       "requiresShipping": false,
       "sorting": 3
     },
@@ -734,7 +739,7 @@
       "price": "€13.95",
       "priceValue": 13.95,
       "currency": "EUR",
-      "mainImage": "https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/66730df4a37963b830a52b2b_Kleber.webp",
+      "mainImage": "images/66730df4a37963b830a52b2b_Kleber.png",
       "requiresShipping": false,
       "sorting": 4
     },

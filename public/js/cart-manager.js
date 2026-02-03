@@ -89,6 +89,14 @@
         const dimensionsDisplay = dimensions.replace(/\(.*?\)/g, '').trim(); // Remove area in parentheses
         const dimensionsShort = dimensionsDisplay.replace(/ x \d+\.\d+ x \d+\.\d+ cm/g, '').replace(/ x \d+ x \d+ cm/g, '').trim() || dimensionsDisplay;
         
+        // Normalize image path
+        let productImage = product.mainImage || (product.images && product.images[0] && product.images[0].url) || '';
+        if (productImage && !productImage.startsWith('http') && !productImage.startsWith('/')) {
+          productImage = '/' + productImage;
+        } else if (productImage && productImage.startsWith('images/')) {
+          productImage = '/' + productImage;
+        }
+        
         cart.items.push({
           productId: productId,
           variantId: variantId,
@@ -97,7 +105,7 @@
           price: product.priceValue || parseFloat(product.price.replace(/[^\d.]/g, '')) || 0,
           priceDisplay: product.price || `€${product.priceValue || 0}.00`,
           currency: product.currency || 'EUR',
-          image: product.mainImage || (product.images && product.images[0] && product.images[0].url) || '',
+          image: productImage,
           dimensions: dimensionsShort,
           quantity: parseInt(quantity, 10)
         });
@@ -201,11 +209,12 @@
           // Show/hide empty state
           if (emptyState) {
             if (cart.items.length === 0) {
-              emptyState.style.display = 'block';
+              emptyState.style.display = 'flex';
+              emptyState.style.flexDirection = 'column';
               if (cartForm) cartForm.style.display = 'none';
             } else {
               emptyState.style.display = 'none';
-              if (cartForm) cartForm.style.display = 'block';
+              if (cartForm) cartForm.style.display = 'flex';
             }
           }
 
@@ -237,38 +246,62 @@
       }
     },
 
-    // Create cart item HTML element
+    // Create cart item HTML element - matching the second image design
     createCartItemHTML: function(item) {
       const div = document.createElement('div');
       div.className = 'w-commerce-commercecartitem';
       div.setAttribute('data-product-id', item.productId);
       div.setAttribute('data-variant-id', item.variantId);
 
-      // Format dimensions for display (e.g., "240×60 cm")
-      const dimensionsDisplay = item.dimensions.replace(/ x /g, '×').replace(/cm/g, 'cm').trim();
+      // Format dimensions for display (e.g., "240x60cm")
+      let dimensionsDisplay = item.dimensions || '';
+      // Convert "240 x 60 x 2.3 cm" to "240x60cm"
+      dimensionsDisplay = dimensionsDisplay.replace(/ x \d+\.?\d* x \d+\.?\d* cm/g, '').replace(/ x /g, 'x').replace(/cm/g, 'cm').trim();
+      if (!dimensionsDisplay.includes('cm') && dimensionsDisplay) {
+        dimensionsDisplay += 'cm';
+      }
+
+      // Normalize image path
+      let itemImage = item.image || '';
+      if (itemImage && !itemImage.startsWith('http') && !itemImage.startsWith('/')) {
+        itemImage = '/' + itemImage;
+      } else if (itemImage && itemImage.startsWith('images/')) {
+        itemImage = '/' + itemImage;
+      }
+
+      // Calculate item total price
+      const itemTotal = (item.price * item.quantity).toFixed(2);
 
       div.innerHTML = `
-        <img src="${item.image || ''}" alt="${item.name || ''}" class="w-commerce-commercecartitemimage">
-        <div class="w-commerce-commercecartiteminfo">
-          <div class="w-commerce-commercecartproductname">${item.name || ''}</div>
-          ${item.dimensions ? `<div class="w-commerce-commercecartproductoption">${dimensionsDisplay}</div>` : ''}
-          <div class="w-commerce-commercecartproductprice">${item.priceDisplay} ${item.currency}</div>
-          <div class="cart-quantity-controls">
-            <button type="button" class="q-dec cart-qty-btn" data-action="decrease" data-product-id="${item.productId}" data-variant-id="${item.variantId}">
-              <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="width: 16px; height: 16px;">
-                <path d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M19 13H5v-2h14v2z" fill="currentColor"></path>
-              </svg>
-            </button>
-            <input type="number" class="cart-quantity-input" value="${item.quantity}" min="1" data-product-id="${item.productId}" data-variant-id="${item.variantId}">
-            <button type="button" class="q-inc cart-qty-btn" data-action="increase" data-product-id="${item.productId}" data-variant-id="${item.variantId}">
-              <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="width: 16px; height: 16px;">
-                <path d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"></path>
-              </svg>
-            </button>
+        <div class="cart-item-wrapper">
+          <img src="${itemImage}" alt="${item.name || ''}" class="w-commerce-commercecartitemimage" onerror="this.style.display='none';">
+          <div class="w-commerce-commercecartiteminfo">
+            <div class="cart-item-header">
+              <div class="cart-item-name-section">
+                <div class="w-commerce-commercecartproductname">${item.name || ''}</div>
+                ${dimensionsDisplay ? `<div class="w-commerce-commercecartproductoption">${dimensionsDisplay}</div>` : ''}
+              </div>
+              <div class="cart-item-price-section">
+                <div class="w-commerce-commercecartproductprice">${this.formatPrice(item.price * item.quantity, item.currency)}</div>
+              </div>
+            </div>
+            <div class="cart-item-controls">
+              <div class="cart-quantity-controls">
+                <button type="button" class="q-dec cart-qty-btn" data-action="decrease" data-product-id="${item.productId}" data-variant-id="${item.variantId}" aria-label="Decrease quantity">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M19 13H5v-2h14v2z" fill="currentColor"></path>
+                  </svg>
+                </button>
+                <input type="number" class="cart-quantity-input" value="${item.quantity}" min="1" data-product-id="${item.productId}" data-variant-id="${item.variantId}" aria-label="Quantity">
+                <button type="button" class="q-inc cart-qty-btn" data-action="increase" data-product-id="${item.productId}" data-variant-id="${item.variantId}" aria-label="Increase quantity">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"></path>
+                  </svg>
+                </button>
+              </div>
+              <a href="#" class="cart-delete-link" data-action="delete" data-product-id="${item.productId}" data-variant-id="${item.variantId}">Delete</a>
+            </div>
           </div>
-          <a href="#" class="cart-delete-link" data-action="delete" data-product-id="${item.productId}" data-variant-id="${item.variantId}">Delete</a>
         </div>
       `;
 

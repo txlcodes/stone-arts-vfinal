@@ -111,19 +111,44 @@
           const parsedData = JSON.parse(stored);
           // Validate localStorage data - check if it has products and at least some sample boxes
           if (parsedData && parsedData.products && Array.isArray(parsedData.products) && parsedData.products.length > 0) {
-            // Check if there are any sample boxes in localStorage data
-            const hasSampleBoxes = parsedData.products.some(p => 
-              p.category === 'AKUROCK Muster' || 
-              (p.id && p.id.includes('-sample')) || 
-              (p.name && p.name.toLowerCase().includes('sample'))
-            );
+            // Check if localStorage has old CDN URLs - if so, prefer JSON file
+            // Check both images array and selection_slider_image fields
+            const brushProduct = parsedData.products.find(p => p.slug === 'brush' || p.id === 'brush');
+            const yamiProduct = parsedData.products.find(p => p.slug === 'yami' || p.id === 'yami');
+            const gaiaProduct = parsedData.products.find(p => p.slug === 'gaia' || p.id === 'gaia');
             
-            if (hasSampleBoxes) {
-              console.log('populate-cms.js: Loaded CMS data from localStorage (valid data with sample boxes)');
-              cmsData = parsedData;
-              return cmsData;
+            const hasOldCDNUrls = 
+              (brushProduct && brushProduct.images && brushProduct.images.some(img => 
+                img.url && (img.url.includes('cdn.prod.website-files.com') || img.url.includes('uploads-ssl.webflow.com'))
+              )) ||
+              (yamiProduct && yamiProduct.selection_slider_image && (
+                yamiProduct.selection_slider_image.includes('cdn.prod.website-files.com') || 
+                yamiProduct.selection_slider_image.includes('uploads-ssl.webflow.com')
+              )) ||
+              (gaiaProduct && gaiaProduct.selection_slider_image && (
+                gaiaProduct.selection_slider_image.includes('cdn.prod.website-files.com') || 
+                gaiaProduct.selection_slider_image.includes('uploads-ssl.webflow.com')
+              ));
+            
+            if (hasOldCDNUrls) {
+              console.warn('populate-cms.js: localStorage has old CDN URLs (images or selection_slider_image), forcing reload from JSON file');
+              localStorage.removeItem(STORAGE_KEY); // Clear old data
+              // Continue to JSON file load below
             } else {
-              console.warn('populate-cms.js: localStorage data exists but has no sample boxes, falling back to JSON file');
+              // Check if there are any sample boxes in localStorage data
+              const hasSampleBoxes = parsedData.products.some(p => 
+                p.category === 'AKUROCK Muster' || 
+                (p.id && p.id.includes('-sample')) || 
+                (p.name && p.name.toLowerCase().includes('sample'))
+              );
+              
+              if (hasSampleBoxes) {
+                console.log('populate-cms.js: Loaded CMS data from localStorage (valid data with sample boxes)');
+                cmsData = parsedData;
+                return cmsData;
+              } else {
+                console.warn('populate-cms.js: localStorage data exists but has no sample boxes, falling back to JSON file');
+              }
             }
           } else {
             console.warn('populate-cms.js: localStorage data is invalid or empty, falling back to JSON file');
@@ -492,21 +517,35 @@
    * This is SAFE - never breaks, always has fallback
    * @param {object} product - Product object
    * @param {string} imageField - Field name (mainImage, selection_slider_image, etc.)
+   * @param {string} imageType - Optional image type (panel, installation, stone, closeup) for gallery images
    * @returns {string} Image path (local or CDN)
    */
-  function getImagePath(product, imageField = 'mainImage') {
+  function getImagePath(product, imageField = 'mainImage', imageType = null) {
     const providedUrl = product[imageField];
     if (!providedUrl) return '';
     
-    // If it's already a local path, use it
+    // If it's already a local path, normalize it (ensure leading slash for Next.js)
     if (providedUrl.startsWith('images/') || providedUrl.startsWith('/images/')) {
-      return providedUrl;
+      // Ensure it starts with / for Next.js public folder
+      return providedUrl.startsWith('/') ? providedUrl : '/' + providedUrl;
     }
     
     // If it's a CDN URL, try to find local equivalent
-    if (providedUrl.includes('cdn.prod.website-files.com')) {
+    if (providedUrl.includes('cdn.prod.website-files.com') || providedUrl.includes('uploads-ssl.webflow.com')) {
       const productSlug = (product.slug || product.id || '').toLowerCase();
       const productName = (product.name || '').toLowerCase();
+      
+      // Extract filenames from CDN URL to find local equivalents
+      // CDN URLs format: https://cdn.prod.website-files.com/.../6672c45aa4067e84ea2efbae_Brush_Paneele.webp
+      let extractedFilename = '';
+      try {
+        const urlParts = providedUrl.split('/');
+        extractedFilename = urlParts[urlParts.length - 1] || '';
+        // Decode URL encoding if present
+        extractedFilename = decodeURIComponent(extractedFilename);
+      } catch (e) {
+        console.warn('populate-cms.js: Error extracting filename from CDN URL:', e);
+      }
       
       // For sample boxes - map to sample images
       if (product.category === 'AKUROCK Muster' || product.id?.includes('-sample')) {
@@ -522,17 +561,39 @@
         const localPath = sampleMap[productSlug] || sampleMap[product.id];
         if (localPath) {
           console.log(`populate-cms.js: Using local sample image for ${product.name}: ${localPath}`);
-          return localPath;
+          return '/' + localPath;
         }
       }
       
-      // For main products - map to block images
+      // For gallery images with type - try to map based on product + type
+      if (imageType && productSlug) {
+        // Try to find local images based on product slug and image type
+        // This is a fallback - if exact filenames don't match, we'll try the CDN URL
+        // The browser's onerror handler will handle 404s
+        const typeBasedPath = `images/${extractedFilename}`;
+        if (extractedFilename) {
+          console.log(`populate-cms.js: Trying local path for gallery image (${imageType}): /${typeBasedPath}`);
+          return '/' + typeBasedPath;
+        }
+      }
+      
+      // For gallery images - try to find local files by extracted filename
+      if (extractedFilename && !imageType) {
+        // Try direct match first
+        const directLocalPath = 'images/' + extractedFilename;
+        // Note: We can't check if file exists client-side, but we can try it
+        // The browser will handle 404s via onerror handler
+        console.log(`populate-cms.js: Trying local path for extracted filename: ${directLocalPath}`);
+        return '/' + directLocalPath;
+      }
+      
+      // For main products - map to block images (fallback for mainImage)
       const localImageMap = {
         'brush': 'images/667530dfb4d435589f6b7508_Brush.webp',
         'whisper': 'images/whisper_block.webp',
-        'gaia': 'images/Gaia_Block.webp',
+        'gaia': 'images/667530ff3fb596c83de661fc_Gaia.png',
         'ligia': 'images/Ligia_block.webp',
-        'yami': 'images/Yami.webp',
+        'yami': 'images/667530f03d356da1743e6c58_Yami.webp',
         'yuki': 'images/yuki_block.webp',
         'scirocco': 'images/Scirocco_block.webp', // Check if exists
         'obsidian': 'images/Obsidian_block.webp', // Check if exists
@@ -541,11 +602,13 @@
       const localPath = localImageMap[productSlug] || localImageMap[productName];
       if (localPath) {
         console.log(`populate-cms.js: Using local image for ${product.name}: ${localPath}`);
-        return localPath;
+        return '/' + localPath;
       }
     }
     
     // Fallback to original URL (CDN or whatever was provided)
+    // For CDN URLs, return as-is - browser will try to load them
+    // The onerror handler in the img tag will handle failures gracefully
     return providedUrl;
   }
 
@@ -665,12 +728,16 @@
    * See PRODUCT-PAGE-PATTERN.md for full pattern documentation.
    */
   function populateProductPage() {
+    console.log('🔄 populate-cms.js: populateProductPage() called');
+    
     // Check if we're on a product detail page
     const productPageIndicator = document.querySelector('[bind="44360311-a628-3bd3-7fc8-c24734f06683"]');
     if (!productPageIndicator) {
       console.warn('populate-cms.js: Not a product detail page, skipping population');
       return;
     }
+    
+    console.log('✅ populate-cms.js: Product page detected, starting population...');
     
     // CRITICAL: Hide ALL empty states on product detail page FIRST
     // This ensures consistent layout regardless of data availability
@@ -686,6 +753,12 @@
     });
     
     let product = getCurrentProduct();
+    console.log('📦 populate-cms.js: Current product:', product ? {
+      name: product.name,
+      slug: product.slug,
+      imageCount: product.images?.length || 0,
+      images: product.images?.map(img => ({ type: img.type, url: img.url })) || []
+    } : 'NOT FOUND');
     if (!product) {
       console.warn('populate-cms.js: Product not found in URL, using first available product as fallback');
       // Fallback to first product if none found
@@ -707,9 +780,24 @@
       console.warn('populate-cms.js: Product missing required fields:', missingFields, 'Product:', product.name);
     }
     
-    // Validate image gallery has 4 images
-    if (!product.images || product.images.length < 4) {
-      console.warn('populate-cms.js: Product should have 4 images (panel, installation, stone, closeup). Found:', product.images?.length || 0, 'Product:', product.name);
+    // Validate image gallery has exactly 4 images
+    if (!product.images || product.images.length !== 4) {
+      console.error('populate-cms.js: Product MUST have exactly 4 images (panel, installation, stone, closeup). Found:', product.images?.length || 0, 'Product:', product.name);
+      // Don't proceed if images are missing - this is critical for the page to work correctly
+      if (!product.images || product.images.length === 0) {
+        console.error('populate-cms.js: Cannot populate product page without images');
+        return;
+      }
+    }
+    
+    // Verify image types are correct
+    if (product.images && product.images.length > 0) {
+      const imageTypes = product.images.map(img => img.type).filter(Boolean);
+      const requiredTypes = ['panel', 'installation', 'stone', 'closeup'];
+      const missingTypes = requiredTypes.filter(type => !imageTypes.includes(type));
+      if (missingTypes.length > 0 && product.images.length < 4) {
+        console.warn('populate-cms.js: Missing image types:', missingTypes, 'Product:', product.name);
+      }
     }
 
     console.log('populate-cms.js: Product data:', {
@@ -814,41 +902,56 @@
       // ALWAYS hide empty state (already done above, but ensure)
       if (emptyState) emptyState.style.display = 'none';
       
+      // ENFORCE: Must have exactly 4 images
+      if (!product.images || product.images.length === 0) {
+        console.error('populate-cms.js: Product has no images, cannot populate mobile gallery. Product:', product.name);
+      } else if (product.images.length < 4) {
+        console.warn('populate-cms.js: Product has only', product.images.length, 'images, expected 4. Product:', product.name);
+      }
+      
       if (product.images && product.images.length > 0) {
-        
         // Use the LAST wrapper (the empty one meant for population) or the first if only one exists
         const wrapper = wrappers.length > 1 ? wrappers[wrappers.length - 1] : wrappers[0];
         
         if (wrapper) {
           wrapper.innerHTML = '';
-          // Sort images by sort_order
+          // Sort images by sort_order to ensure correct order: panel, installation, stone, closeup
           const sortedImages = [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
           
-          // Check if mainImage is already in the images array to avoid duplicates
-          const mainImageInArray = sortedImages.some(img => img.url === product.mainImage);
+          // ENFORCE: Display exactly 4 images (or as many as available, up to 4)
+          // Don't add mainImage separately - use only the 4 images from the images array
+          const imagesToDisplay = sortedImages.slice(0, 4);
           
-          // Add main image first if available and not already in array
-          if (product.mainImage && !mainImageInArray) {
-            const mainImagePath = getImagePath(product, 'mainImage');
-            const mainSlide = document.createElement('div');
-            mainSlide.className = 'swiper-slide is-swiper-product w-dyn-item';
-            mainSlide.setAttribute('role', 'listitem');
-            mainSlide.innerHTML = `<div class="img-hight"><img alt="${product.name}" loading="lazy" src="${mainImagePath}" class="img-swiper_img" onerror="this.onerror=null; this.src='${product.mainImage}'"></div>`;
-            wrapper.appendChild(mainSlide);
-          }
-          
-          // Add structured images (should be 4 images: panel, installation, stone, closeup)
-          sortedImages.forEach((imgObj) => {
-            if (imgObj.url) { // Only add if URL exists
-              // Try to get local image, fallback to original URL
-              const imagePath = getImagePath({ ...product, mainImage: imgObj.url }, 'mainImage');
+          imagesToDisplay.forEach((imgObj, index) => {
+            if (imgObj.url) {
+              // Normalize the image path - if it's already local (starts with images/), use it directly
+              // Otherwise, try to get local image via getImagePath
+              let imagePath = imgObj.url;
+              if (!imgObj.url.startsWith('images/') && !imgObj.url.startsWith('/images/')) {
+                // Try to get local image, fallback to original URL
+                imagePath = getImagePath({ ...product, mainImage: imgObj.url }, 'mainImage', imgObj.type);
+              } else {
+                // Already a local path - ensure it has leading slash for Next.js
+                imagePath = imgObj.url.startsWith('/') ? imgObj.url : '/' + imgObj.url;
+              }
+              
               const slide = document.createElement('div');
               slide.className = 'swiper-slide is-swiper-product w-dyn-item';
               slide.setAttribute('role', 'listitem');
-              slide.innerHTML = `<div class="img-hight"><img alt="${product.name} - ${imgObj.type}" loading="lazy" src="${imagePath}" class="img-swiper_img" onerror="this.onerror=null; this.src='${imgObj.url}'"></div>`;
+              slide.setAttribute('bind', '2fb8e092-727e-f3ca-475b-8178c0fc023b');
+              slide.innerHTML = `<div class="img-hight"><img alt="${product.name} - ${imgObj.type || 'image ' + (index + 1)}" loading="lazy" bind="7978e09f-6b72-4bed-57c5-500574fcbff5" src="${imagePath}" class="img-swiper_img" onerror="this.onerror=null; this.src='${imgObj.url}'"></div>`;
               wrapper.appendChild(slide);
+              console.log(`populate-cms.js: Added image ${index + 1} to mobile gallery: ${imagePath}`);
             }
           });
+          
+          if (imagesToDisplay.length < 4) {
+            console.warn('populate-cms.js: Only added', imagesToDisplay.length, 'images to mobile gallery (expected 4). Product:', product.name);
+          } else {
+            console.log('populate-cms.js: Successfully added', imagesToDisplay.length, 'image slides to mobile gallery');
+          }
+        } else {
+          console.error('populate-cms.js: Mobile gallery wrapper not found');
         }
         
         // Hide the first wrapper if it exists (the hardcoded one)
@@ -856,59 +959,107 @@
           wrappers[0].style.display = 'none';
         }
         
-        console.log('populate-cms.js: Added', (product.mainImage ? 1 : 0) + sortedImages.length, 'image slides to mobile gallery');
-        
         // Reinitialize Swiper after adding images
         reinitSwiper(imageGallery);
       } else {
-        console.warn('populate-cms.js: No images found for product:', product.name);
+        console.error('populate-cms.js: No images found for product:', product.name);
       }
     }
     
     // Desktop image grid - bind="ba91b3e9-080a-1c76-e14e-e7aa27382349"
     const desktopImageGallery = document.querySelector('[bind="ba91b3e9-080a-1c76-e14e-e7aa27382349"]');
-    if (desktopImageGallery && product.images && product.images.length > 0) {
-      const gridWrapper = desktopImageGallery.querySelector('[bind="ba91b3e9-080a-1c76-e14e-e7aa2738234a"]');
+    if (desktopImageGallery) {
+      // CRITICAL: There are TWO wrappers with the same bind - find ALL of them
+      const allWrappers = desktopImageGallery.querySelectorAll('[bind="ba91b3e9-080a-1c76-e14e-e7aa2738234a"]');
       const emptyState = desktopImageGallery.querySelector('[bind="ba91b3e9-080a-1c76-e14e-e7aa2738234d"]');
       
       if (emptyState) emptyState.style.display = 'none';
       
-      if (gridWrapper) {
-        // Clear existing hardcoded images
-        gridWrapper.innerHTML = '';
-        const sortedImages = [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-        
-        // Check if mainImage is already in the images array
-        const mainImageInArray = sortedImages.some(img => img.url === product.mainImage);
-        
-        // Add main image first if available and not already in array
-        if (product.mainImage && !mainImageInArray) {
-          const mainImagePath = getImagePath(product, 'mainImage');
-          const mainItem = document.createElement('div');
-          mainItem.className = 'collection-item-2 w-dyn-item';
-          mainItem.setAttribute('role', 'listitem');
-          mainItem.setAttribute('bind', 'ba91b3e9-080a-1c76-e14e-e7aa2738234b');
-          mainItem.setAttribute('item', 'product-image');
-          mainItem.innerHTML = `<img item="product-image-src" loading="lazy" width="573" src="${mainImagePath}" alt="${product.name}" bind="ba91b3e9-080a-1c76-e14e-e7aa2738234c" class="image-107" onerror="this.onerror=null; this.src='${product.mainImage}'">`;
-          gridWrapper.appendChild(mainItem);
+      // ENFORCE: Must have images to display
+      if (!product.images || product.images.length === 0) {
+        console.error('populate-cms.js: Product has no images, cannot populate desktop gallery. Product:', product.name);
+      } else if (product.images.length < 4) {
+        console.warn('populate-cms.js: Product has only', product.images.length, 'images for desktop gallery (expected 4). Product:', product.name);
+      }
+      
+      // Hide ALL hardcoded wrappers first
+      allWrappers.forEach((wrapper, index) => {
+        // Check if this wrapper has hardcoded images (has img elements with src already set)
+        const hasHardcodedImages = wrapper.querySelectorAll('img[src]:not([src=""])').length > 0;
+        if (hasHardcodedImages) {
+          console.log(`populate-cms.js: Hiding hardcoded wrapper ${index + 1}`);
+          wrapper.style.display = 'none';
         }
+      });
+      
+      // Use the FIRST wrapper (the empty one meant for population)
+      const gridWrapper = allWrappers[0];
+      
+      if (gridWrapper && product.images && product.images.length > 0) {
+        console.log('populate-cms.js: Populating desktop gallery for', product.name, 'with', product.images.length, 'images');
         
-        // Add structured images
-        sortedImages.forEach((imgObj) => {
+        // Make sure the wrapper is visible and has correct grid styling
+        gridWrapper.style.display = 'grid';
+        gridWrapper.style.gridTemplateRows = 'auto auto';
+        gridWrapper.style.gridTemplateColumns = '1fr 1fr';
+        gridWrapper.style.gridColumnGap = '5px';
+        gridWrapper.style.gridRowGap = '5px';
+        gridWrapper.style.minHeight = '900px';
+        
+        // Clear existing content (should be empty, but clear anyway)
+        gridWrapper.innerHTML = '';
+        
+        // Sort images by sort_order to ensure correct order: panel, installation, stone, closeup
+        const sortedImages = [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        console.log('populate-cms.js: Sorted images:', sortedImages.map(img => ({ type: img.type, url: img.url })));
+        
+        // ENFORCE: Display exactly 4 images (or as many as available, up to 4)
+        // Use only the images from the images array - don't add mainImage separately
+        const imagesToDisplay = sortedImages.slice(0, 4);
+        
+        imagesToDisplay.forEach((imgObj, index) => {
           if (imgObj.url) {
-            // Try to get local image, fallback to original URL
-            const imagePath = getImagePath({ ...product, mainImage: imgObj.url }, 'mainImage');
+            // Normalize the image path - if it's already local (starts with images/), use it directly
+            // Otherwise, try to get local image via getImagePath
+            let imagePath = imgObj.url;
+            if (!imgObj.url.startsWith('images/') && !imgObj.url.startsWith('/images/')) {
+              // Try to get local image, fallback to original URL
+              imagePath = getImagePath({ ...product, mainImage: imgObj.url }, 'mainImage', imgObj.type);
+            } else {
+              // Already a local path - ensure it has leading slash for Next.js
+              imagePath = imgObj.url.startsWith('/') ? imgObj.url : '/' + imgObj.url;
+            }
+            
+            console.log(`populate-cms.js: Image ${index + 1} (${imgObj.type}): ${imgObj.url} -> ${imagePath}`);
+            
             const item = document.createElement('div');
             item.className = 'collection-item-2 w-dyn-item';
             item.setAttribute('role', 'listitem');
             item.setAttribute('bind', 'ba91b3e9-080a-1c76-e14e-e7aa2738234b');
             item.setAttribute('item', 'product-image');
-            item.innerHTML = `<img item="product-image-src" loading="lazy" width="573" src="${imagePath}" alt="${product.name} - ${imgObj.type}" bind="ba91b3e9-080a-1c76-e14e-e7aa2738234c" class="image-107" onerror="this.onerror=null; this.src='${imgObj.url}'">`;
+            // Ensure images fill the grid cell properly and are bigger
+            item.style.width = '100%';
+            item.style.height = '100%';
+            item.style.minHeight = '450px';
+            item.style.position = 'relative';
+            item.innerHTML = `<img item="product-image-src" loading="lazy" width="573" src="${imagePath}" alt="${product.name} - ${imgObj.type || 'image ' + (index + 1)}" bind="ba91b3e9-080a-1c76-e14e-e7aa2738234c" class="image-107" style="width: 100%; height: 100%; min-height: 450px; object-fit: cover;" onerror="console.error('Image failed to load:', '${imagePath}'); this.onerror=null; this.src='${imgObj.url}'">`;
             gridWrapper.appendChild(item);
+          } else {
+            console.warn(`populate-cms.js: Image ${index + 1} has no URL`);
           }
         });
         
-        console.log('populate-cms.js: Added', (product.mainImage && !mainImageInArray ? 1 : 0) + sortedImages.length, 'images to desktop gallery');
+        if (imagesToDisplay.length < 4) {
+          console.warn('populate-cms.js: Only added', imagesToDisplay.length, 'images to desktop gallery (expected 4). Product:', product.name);
+        } else {
+          console.log('populate-cms.js: ✅ Successfully added 4 images to desktop gallery');
+        }
+      } else {
+        console.error('populate-cms.js: Cannot populate desktop gallery - missing gridWrapper or images', {
+          hasGridWrapper: !!gridWrapper,
+          hasImages: !!(product.images && product.images.length > 0),
+          imageCount: product.images?.length || 0
+        });
       }
     }
 
@@ -954,12 +1105,25 @@
             slide.className = 'swiper-slide is-slider-selector w-dyn-item';
             slide.setAttribute('role', 'listitem');
             const isActive = p.slug === product.slug ? 'active' : '';
-            const thumbImage = p.selection_slider_image || p.mainImage || '';
+            
+            // Normalize image path - ensure local paths have leading slash for Next.js
+            let thumbImage = p.selection_slider_image || p.mainImage || '';
+            if (thumbImage) {
+              if (thumbImage.startsWith('images/') && !thumbImage.startsWith('/images/')) {
+                // Add leading slash for Next.js
+                thumbImage = '/' + thumbImage;
+              } else if (!thumbImage.startsWith('/') && !thumbImage.startsWith('http')) {
+                // If it's a relative path without images/, assume it's in images/
+                thumbImage = '/images/' + thumbImage;
+              }
+            }
+            
+            console.log(`populate-cms.js: Variant selector - ${p.name}: ${p.selection_slider_image} -> ${thumbImage}`);
+            
             slide.innerHTML = `
               <a href="/product/${p.slug}" class="slider-selector_link is-slider-selector w-inline-block ${isActive}">
                 <div class="slider-selector_height">
-                  <img loading="lazy" width="95" src="${thumbImage}" alt="${p.name || ''}" class="slider-selector_img">
-                  <div class="checkmark_wrapper mobile"><img src="images/Aktive-Produkt-Selection-Kachel-Kreis-mit-Hackerl-Schwarz.svg" loading="lazy" alt="" class="checkmark_mobile"></div>
+                  <img loading="lazy" width="95" src="${thumbImage}" alt="${p.name || ''}" class="slider-selector_img" onerror="console.error('Variant selector image failed:', '${thumbImage}'); this.onerror=null;">
                 </div>
               </a>
             `;
@@ -1003,11 +1167,11 @@
         
         // Map product slugs to their slider image URLs (matching the website)
         const sliderImageMap = {
-          'yami': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c4b2bd73d678ad4c9fab_Yami.webp',
+          'yami': 'images/667530f03d356da1743e6c58_Yami.webp',
           'yuki': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c665321c865a6ece69a9_Yuki.webp',
           'brush': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672bbb7fc31823192fae261_Brush.webp',
           'whisper': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672b96579bfa56457a41e01_Whisper.webp',
-          'gaia': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c576c2c69c8cce1f8ac2_Gaia.webp',
+          'gaia': 'images/667530ff3fb596c83de661fc_Gaia.png',
           'ligia': 'https://cdn.prod.website-files.com/64ad5017cecbda3ed3e03b0f/6672c5e85eaae26e4deef821_ligia.webp'
         };
         
@@ -1026,7 +1190,21 @@
           const isActive = p.slug === product.slug;
           // Use mapped image if available, otherwise fall back to selection_slider_image or mainImage
           // PATTERN: All products should use selection_slider_image for consistency
-          const thumbImage = sliderImageMap[p.slug] || p.selection_slider_image || p.mainImage || '';
+          let thumbImage = sliderImageMap[p.slug] || p.selection_slider_image || p.mainImage || '';
+          
+          // Normalize image path - ensure local paths have leading slash for Next.js
+          if (thumbImage) {
+            if (thumbImage.startsWith('images/') && !thumbImage.startsWith('/images/')) {
+              // Add leading slash for Next.js
+              thumbImage = '/' + thumbImage;
+            } else if (!thumbImage.startsWith('/') && !thumbImage.startsWith('http')) {
+              // If it's a relative path without images/, assume it's in images/
+              thumbImage = '/images/' + thumbImage;
+            }
+          }
+          
+          console.log(`populate-cms.js: Desktop variant selector - ${p.name}: ${p.selection_slider_image} -> ${thumbImage}`);
+          
           const slide = document.createElement('div');
           slide.setAttribute('bind', '1a91082b-8f19-b175-b9ba-0deb9fa8ae12');
           slide.setAttribute('role', 'group');
@@ -1035,11 +1213,8 @@
           
           slide.innerHTML = `
             <a bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae13" aria-label="Akurock Acoustic Panels Link" href="/product/${p.slug}" class="slider-selector_link is-slider-selector w-inline-block${isActive ? ' w--current' : ''}"${isActive ? ' aria-current="page"' : ''}>
-              <img bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae15" loading="lazy" width="95" alt="${p.name || ''}" src="${thumbImage}" class="slider-selector_img">
+              <img bind="1a91082b-8f19-b175-b9ba-0deb9fa8ae15" loading="lazy" width="95" alt="${p.name || ''}" src="${thumbImage}" class="slider-selector_img" onerror="console.error('Desktop variant selector image failed:', '${thumbImage}'); this.onerror=null;">
               <div class="swiper-main-img"></div>
-              <div class="checkmark_wrapper" style="display: ${isActive ? 'flex' : 'none'};">
-                <img src="https://cdn.prod.website-files.com/64ad4116e38ed7d405f77d26/667512ce089e636294d56006_Aktive%20Produkt%20Selection%20Kachel%20Kreis%20mit%20Hackerl%20Schwarz.svg" loading="lazy" alt="" class="image-215">
-              </div>
             </a>
           `;
           
@@ -1053,9 +1228,9 @@
       }
     }
 
-    // Accessories section - show main accessories sorted
-    const accessoriesList = document.querySelector('[bind="d37286f8-45ee-d5c0-5042-fa9b1e03f774"]');
-    if (accessoriesList) {
+    // Helper function to populate accessories section
+    function populateAccessoriesSection(accessoriesList, imageClass = 'image-214') {
+      if (!accessoriesList) return;
       // Find the CORRECT wrapper - there are two .w-dyn-items, use the LAST one (the empty one for population)
       const allWrappers = accessoriesList.querySelectorAll('.w-dyn-items');
       const wrapper = allWrappers.length > 1 ? allWrappers[allWrappers.length - 1] : allWrappers[0];
@@ -1090,9 +1265,17 @@
               const accessoryVariantId = accessory.variantId || '';
               const accessoryDataId = accessory.id || '';
               
+              // Normalize image path for Next.js
+              let accessoryImage = accessory.mainImage || '';
+              if (accessoryImage && !accessoryImage.startsWith('http') && !accessoryImage.startsWith('/')) {
+                accessoryImage = '/' + accessoryImage;
+              } else if (accessoryImage && accessoryImage.startsWith('images/')) {
+                accessoryImage = '/' + accessoryImage;
+              }
+              
               item.innerHTML = `
                 <div class="content_additionals">
-                  <div class="addtions_img_container"><img loading="lazy" src="${accessory.mainImage || ''}" alt="${accessory.name || ''}" class="image-214"></div>
+                  <div class="addtions_img_container"><img loading="lazy" src="${accessoryImage}" alt="${accessory.name || ''}" class="${imageClass}"></div>
                   <div class="description additionals">
                     <h2 class="additional_top">${accessory.name || ''}</h2>
                     <div class="text-block-92">${accessory.description || ''}</div>
@@ -1117,9 +1300,15 @@
       } else {
         console.warn('populate-cms.js: No accessories data found');
       }
-    } else {
-      console.warn('populate-cms.js: Accessories container not found');
     }
+
+    // Populate mobile accessories section
+    const accessoriesListMobile = document.querySelector('[bind="d37286f8-45ee-d5c0-5042-fa9b1e03f774"]');
+    populateAccessoriesSection(accessoriesListMobile, 'image-214');
+    
+    // Populate desktop accessories section
+    const accessoriesListDesktop = document.querySelector('[bind="a7947cab-d687-58a0-424a-fd0cace23832"]');
+    populateAccessoriesSection(accessoriesListDesktop, 'image-211');
 
     // Apply hover images to product cards if available
     if (product.hover_image) {
@@ -1412,10 +1601,19 @@
 
       // PATTERN ENFORCEMENT: Only display products that follow the pattern
       sortedProducts.forEach((product) => {
-        // Validate product has required fields
+        // Validate product has required fields INCLUDING cart IDs
         if (!product.name || !product.slug || !product.mainImage) {
           console.warn('populate-cms.js: Product missing required fields for homepage grid, skipping:', product.name);
           return; // Skip products that don't follow pattern
+        }
+        
+        // CRITICAL: Validate product has cart IDs (productId and variantId)
+        if (!product.productId || !product.variantId) {
+          console.error('populate-cms.js: Product missing cart IDs (productId/variantId) for homepage grid, skipping:', product.name, {
+            productId: product.productId || 'MISSING',
+            variantId: product.variantId || 'MISSING'
+          });
+          return; // Skip products without cart IDs - they won't work in cart
         }
         
         // Get product images - use first 3 images from images array or fallback to mainImage
@@ -1451,8 +1649,8 @@
       const card = document.createElement('div');
       card.className = 'collection-item-5 w-dyn-item';
       card.setAttribute('role', 'listitem');
-      card.setAttribute('data-product-id', product.productId || '');
-      card.setAttribute('data-variant-id', product.variantId || '');
+      card.setAttribute('data-product-id', product.productId);
+      card.setAttribute('data-variant-id', product.variantId);
       
       card.innerHTML = `
         <div class="item-wrap_samples" style="background-color: ${cardBgColor};">
@@ -1477,8 +1675,10 @@
             <div class="add-to-cart">
               <form data-node-type="commerce-add-to-cart-form" 
                     class="w-commerce-commerceaddtocartform"
-                    data-wf-product-id="${product.productId || ''}"
-                    data-wf-variant-id="${product.variantId || ''}"
+                    data-wf-product-id="${product.productId}"
+                    data-wf-variant-id="${product.variantId}"
+                    data-product-id="${product.productId}"
+                    data-variant-id="${product.variantId}"
                     action="javascript:void(0);"
                     onsubmit="return false;">
                 <input type="hidden" name="commerce-add-to-cart-quantity-input" value="1">
@@ -1507,6 +1707,25 @@
       `;
 
       gridContainer.appendChild(card);
+      
+      // CRITICAL: Set up form immediately after card is added to DOM
+      const cardForm = card.querySelector('[data-node-type="commerce-add-to-cart-form"]');
+      if (cardForm && product.productId && product.variantId) {
+        // Ensure button type is button, not submit
+        const button = cardForm.querySelector('[data-node-type="commerce-add-to-cart-button"]');
+        if (button) {
+          button.type = 'button';
+        }
+        // Set up form handler immediately
+        setupFormImmediately(cardForm, product.productId, product.variantId);
+        console.log('populate-cms.js: Set up cart form for product card:', product.name, { productId: product.productId, variantId: product.variantId });
+      } else {
+        console.error('populate-cms.js: Failed to set up cart form for product card:', product.name, {
+          formFound: !!cardForm,
+          productId: product.productId || 'MISSING',
+          variantId: product.variantId || 'MISSING'
+        });
+      }
 
       // Add hover image effect
       const mainImg = card.querySelector('.product-main-image');
@@ -1536,6 +1755,13 @@
     });
 
     console.log('populate-cms.js: Homepage product grid populated successfully');
+    
+    // CRITICAL: Initialize cart integration after all cards are added
+    // Use requestAnimationFrame to ensure DOM updates are complete
+    requestAnimationFrame(() => {
+      console.log('populate-cms.js: Initializing cart integration for homepage product grid...');
+      initCartIntegration();
+    });
   }
 
   // Populate home page product slider
@@ -1556,11 +1782,25 @@
     }
     
     if (wrapper) {
-      // Sort products by sorting field and take first 4
-      const sortedProducts = [...cmsData.products]
-        .filter(p => p.category === 'AKUROCK Akustikpaneele') // Only main products, not samples
-        .sort((a, b) => (a.sorting || 999) - (b.sorting || 999))
-        .slice(0, 4);
+      // Use the collection's product list to match the reference site exactly
+      // Find the "akurock-akustikpaneele" collection
+      const mainCollection = cmsData.collections?.find(c => c.id === 'akurock-akustikpaneele' || c.handle === 'akurock-akustikpaneele');
+      
+      let sortedProducts = [];
+      
+      if (mainCollection && mainCollection.products && Array.isArray(mainCollection.products)) {
+        // Use products from collection in the order specified
+        const productMap = new Map(cmsData.products.map(p => [p.id || p.slug || p.handle, p]));
+        sortedProducts = mainCollection.products
+          .map(productId => productMap.get(productId))
+          .filter(Boolean) // Remove any undefined products
+          .filter(p => p.name && p.slug); // Validate required fields
+      } else {
+        // Fallback: filter by category if collection not found
+        sortedProducts = [...cmsData.products]
+          .filter(p => p.category === 'AKUROCK Akustikpaneele')
+          .sort((a, b) => (a.sorting || 999) - (b.sorting || 999));
+      }
       
       // Clear existing slides and create new ones dynamically
       wrapper.innerHTML = '';
@@ -1579,12 +1819,21 @@
         
         // PATTERN: Prioritize interior design/application images over product shots
         // This ensures all products display as interior design examples, not product cards
-        // 1. Check for installation/interior images in images array
-        // 2. Check hover_image_installation (interior design scene)
-        // 3. Fallback to selection_slider_image (interior design)
-        // 4. Last resort: mainImage (product shot)
+        // BUT: If mainImage is a local path (images/...), prioritize it first
+        // 1. Check mainImage if it's a local path (user-specified image)
+        // 2. Check for installation/interior images in images array
+        // 3. Check hover_image_installation (interior design scene)
+        // 4. Fallback to selection_slider_image (interior design)
+        // 5. Last resort: mainImage (product shot)
         let mainImageUrl = '';
-        if (product.images && Array.isArray(product.images)) {
+        
+        // PRIORITY: If mainImage is a local path, use it first (user-specified)
+        if (product.mainImage && (product.mainImage.startsWith('images/') || product.mainImage.startsWith('/images/'))) {
+          mainImageUrl = product.mainImage;
+        }
+        
+        // Otherwise, check images array for installation/interior images
+        if (!mainImageUrl && product.images && Array.isArray(product.images)) {
           // Look for installation or application type images (interior design scenes)
           const installationImage = product.images.find(img => 
             img.type === 'installation' || 
@@ -1613,27 +1862,39 @@
         }
         
         // For hover, use a different interior design image if available
+        // PRIORITY: Always prioritize hover_image and hover_image_installation if they exist
+        // Skip images array entirely if these are set (especially for user-specified images)
         let hoverImageUrl = '';
-        if (product.images && Array.isArray(product.images)) {
+        
+        // PRIORITY 1: If hover_image is set, use it (regardless of whether it matches mainImage)
+        // This ensures user-specified hover images are always used
+        if (product.hover_image) {
+          hoverImageUrl = product.hover_image;
+          console.log(`populate-cms.js: Using hover_image for ${product.name}: ${hoverImageUrl}`);
+        }
+        
+        // PRIORITY 2: If hover_image_installation is set and hover_image wasn't set, use it
+        if (!hoverImageUrl && product.hover_image_installation) {
+          hoverImageUrl = product.hover_image_installation;
+          console.log(`populate-cms.js: Using hover_image_installation for ${product.name}: ${hoverImageUrl}`);
+        }
+        
+        // PRIORITY 3: Only check images array if hover_image/hover_image_installation are NOT set
+        if (!hoverImageUrl && product.images && Array.isArray(product.images)) {
           // Find a different installation/interior image for hover
           const hoverInstallationImage = product.images.find(img => 
             img.type === 'installation' && img.url !== mainImageUrl
           );
           if (hoverInstallationImage) {
             hoverImageUrl = hoverInstallationImage.url;
+            console.log(`populate-cms.js: Using images array installation image for ${product.name}: ${hoverImageUrl}`);
           }
         }
-        // Prioritize hover_image if it's different from mainImage
-        if (!hoverImageUrl && product.hover_image && product.hover_image !== mainImageUrl) {
-          hoverImageUrl = product.hover_image;
-        }
-        // Then check hover_image_installation
-        if (!hoverImageUrl && product.hover_image_installation && product.hover_image_installation !== mainImageUrl) {
-          hoverImageUrl = product.hover_image_installation;
-        }
-        // Last fallback
+        
+        // Last fallback: use mainImage
         if (!hoverImageUrl) {
           hoverImageUrl = mainImageUrl;
+          console.log(`populate-cms.js: Using mainImage as hover fallback for ${product.name}: ${hoverImageUrl}`);
         }
         
         // PATTERN: Use stone description (detailed), not product description
@@ -2337,9 +2598,23 @@
       if (newForms.length > 0) {
         console.log('initCartIntegration: New forms detected, attaching handlers immediately...', newForms.length);
         newForms.forEach(form => {
+          // Skip accessory forms
+          const isAccessoryForm = form.closest('[bind="409f9c8b-4b78-5f06-d0ad-57ad5bbfb293"]') || 
+                                  form.closest('.add-ons') ||
+                                  form.querySelector('.addtional-products');
+          if (isAccessoryForm) {
+            return; // Skip silently - accessory forms are handled separately
+          }
+          
           const productId = form.getAttribute('data-wf-product-id');
           const variantId = form.getAttribute('data-wf-variant-id');
-          setupFormHandler(form, productId, variantId);
+          
+          if (productId && variantId) {
+            setupFormHandler(form, productId, variantId);
+          } else {
+            // Don't warn here - form might not be populated yet
+            // The setInterval will handle it later if needed
+          }
         });
       }
     });
@@ -2361,25 +2636,58 @@
     
     // Also re-check periodically to catch any forms we might have missed
     // This ensures forms are set up even if CartManager wasn't ready initially
+    const warnedForms = new WeakSet(); // Track forms we've already warned about
     setInterval(function() {
       const allForms = document.querySelectorAll('[data-node-type="commerce-add-to-cart-form"]');
       allForms.forEach(form => {
-        // Check if form is set up OR has handlers attached
-        if (form.dataset.formSetupComplete !== 'true' && form.dataset.cartHandlerAttached !== 'true') {
-          const productId = form.getAttribute('data-wf-product-id');
-          const variantId = form.getAttribute('data-wf-variant-id');
-          if (productId && variantId) {
-            console.log('initCartIntegration: Found unhandled form, attaching handler...', { productId, variantId });
-            setupFormHandler(form, productId, variantId);
-          } else {
+        // Skip if already set up or handler attached
+        if (form.dataset.formSetupComplete === 'true' || form.dataset.cartHandlerAttached === 'true') {
+          return;
+        }
+        
+        // Skip accessory forms (they have their own IDs set separately)
+        const isAccessoryForm = form.closest('[bind="409f9c8b-4b78-5f06-d0ad-57ad5bbfb293"]') || 
+                                form.closest('.add-ons') ||
+                                form.querySelector('.addtional-products');
+        if (isAccessoryForm) {
+          return; // Skip silently - accessory forms are handled separately
+        }
+        
+        // Skip forms that are marked to be skipped
+        if (form.dataset.skipCartIntegration === 'true') {
+          return;
+        }
+        
+        const productId = form.getAttribute('data-wf-product-id');
+        const variantId = form.getAttribute('data-wf-variant-id');
+        
+        if (productId && variantId) {
+          console.log('initCartIntegration: Found unhandled form, attaching handler...', { productId, variantId });
+          setupFormHandler(form, productId, variantId);
+        } else {
+          // Only warn once per form to avoid spam
+          if (!warnedForms.has(form)) {
+            // Check if this form is in a section that hasn't been populated yet
+            // If it's in a product page section, it might just need more time
+            const isProductPageForm = form.closest('.product, [class*="product"], section.product');
+            if (isProductPageForm) {
+              // Don't warn for product page forms - they'll be populated by populateProductPage
+              // Just mark as warned so we don't check again
+              warnedForms.add(form);
+              return;
+            }
+            
+            // Only warn for forms that are clearly not in populated sections
             console.warn('initCartIntegration: Form missing IDs, cannot attach handler', {
               productId: productId || 'missing',
-              variantId: variantId || 'missing'
+              variantId: variantId || 'missing',
+              formLocation: form.closest('section, .section')?.className || 'unknown'
             });
+            warnedForms.add(form);
           }
         }
       });
-    }, 1000); // Check every second
+    }, 2000); // Check every 2 seconds (reduced frequency to avoid spam)
     
     console.log('✅ initCartIntegration: Cart integration initialized successfully');
   }

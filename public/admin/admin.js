@@ -1116,15 +1116,24 @@
       errors.push('Selection Slider Image is required (for variant selector)');
     }
 
-    // Image gallery validation
-    if (!productData.images || !Array.isArray(productData.images) || productData.images.length < 4) {
-      warnings.push('Image Gallery should have 4 images: panel, installation, stone, closeup');
+    // Image gallery validation - ENFORCE exactly 4 images
+    if (!productData.images || !Array.isArray(productData.images) || productData.images.length === 0) {
+      errors.push('Image Gallery is required and must have exactly 4 images: panel, installation, stone, closeup');
+    } else if (productData.images.length !== 4) {
+      errors.push(`Image Gallery must have exactly 4 images (found ${productData.images.length}). Required types: panel, installation, stone, closeup`);
     } else {
+      // Validate image types when we have 4 images
       const imageTypes = productData.images.map(img => img.type).filter(Boolean);
       const requiredTypes = ['panel', 'installation', 'stone', 'closeup'];
       const missingTypes = requiredTypes.filter(type => !imageTypes.includes(type));
       if (missingTypes.length > 0) {
-        warnings.push(`Image Gallery missing types: ${missingTypes.join(', ')}`);
+        warnings.push(`Image Gallery missing recommended types: ${missingTypes.join(', ')}. All 4 images should be properly typed.`);
+      }
+      
+      // Validate all images have URLs
+      const imagesWithoutUrls = productData.images.filter(img => !img.url || img.url.trim() === '');
+      if (imagesWithoutUrls.length > 0) {
+        errors.push(`${imagesWithoutUrls.length} image(s) in gallery are missing URLs`);
       }
     }
 

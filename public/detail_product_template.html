@@ -315,7 +315,7 @@
             </nav>
           </div>
           <div class="nav-center">
-            <a href="index.html" class="nav-logo-link w-inline-block"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
+            <a href="index.html" class="nav-logo-link w-inline-block"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
           </div>
           <div class="nav-right">
             <nav role="navigation" class="nav-menu _2 w-nav-menu">
@@ -333,12 +333,12 @@
               <div class="account-wrapper"><img src="images/person-outline-2.svg" loading="lazy" alt="" class="image-121"></div>
               <div bind="4bc36725-f958-4612-d2cb-e90fd749bb24" data-open-product="" data-wf-cart-type="rightSidebar" data-wf-cart-query="" data-wf-page-link-href-prefix="" class="w-commerce-commercecartwrapper cart" data-node-type="commerce-cart-wrapper">
                 <a bind="4bc36725-f958-4612-d2cb-e90fd749bb25" class="w-commerce-commercecartopenlink cart-button-3 w-inline-block" role="button" aria-haspopup="dialog" aria-label="Open cart" data-node-type="commerce-cart-open-link" href="#">
-                  <div bind="4bc36725-f958-4612-d2cb-e90fd749bb26" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="images/bag-outline-1.svg" loading="lazy" alt="" class="image-122">
+                  <div bind="4bc36725-f958-4612-d2cb-e90fd749bb26" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline.svg" loading="lazy" alt="" class="image-122">
                 </a>
                 <div bind="4bc36725-f958-4612-d2cb-e90fd749bb28" style="display:none" class="w-commerce-commercecartcontainerwrapper w-commerce-commercecartcontainerwrapper--cartType-rightSidebar" data-node-type="commerce-cart-container-wrapper">
                   <div bind="4bc36725-f958-4612-d2cb-e90fd749bb29" data-node-type="commerce-cart-container" role="dialog" class="w-commerce-commercecartcontainer cart-container-2">
                     <div bind="4bc36725-f958-4612-d2cb-e90fd749bb2a" class="w-commerce-commercecartheader">
-                      <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb2b" class="w-commerce-commercecartheading heading-253">Your shopping cart</h4>
+                      <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb2b" class="w-commerce-commercecartheading heading-253"><img src="/images/bag-outline.svg" alt="Shopping cart" style="width: 24px; height: 24px;" /></h4>
                       <a bind="4bc36725-f958-4612-d2cb-e90fd749bb2d" class="w-commerce-commercecartcloselink w-inline-block" role="button" aria-label="Close cart" data-node-type="commerce-cart-close-link"><svg class="icon-12" width="16px" height="16px" viewbox="0 0 16 16">
                           <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                             <g fill-rule="nonzero" fill="#333333">
@@ -353,7 +353,7 @@
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb31" template-bind="4bc36725-f958-4612-d2cb-e90fd749bb31" class="w-commerce-commercecartlist" data-wf-collection="database.commerceOrder.userItems" data-wf-template-id="wf-template-4bc36725-f958-4612-d2cb-e90fd749bb31"></div>
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb41" class="w-commerce-commercecartfooter">
                           <div aria-atomic="true" aria-live="polite" bind="4bc36725-f958-4612-d2cb-e90fd749bb42" class="w-commerce-commercecartlineitem">
-                            <div class="text-block-107">Total</div>
+                            <div class="text-block-107">In total</div>
                             <div bind="4bc36725-f958-4612-d2cb-e90fd749bb45" class="w-commerce-commercecartordervalue text-block-124"></div>
                           </div>
                           <div bind="4bc36725-f958-4612-d2cb-e90fd749bb46">
@@ -391,13 +391,22 @@
                                 <div>Pay with browser.</div>
                               </a>
                             </div>
-                            <a href="customer-type-selection.html" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">Continue to Checkout</a>
+                            <a href="customer-type-selection.html" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb4f" class="w-commerce-commercecartcheckoutbutton checkout-button-2" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">To the checkout</a>
                             <a bind="22afc99a-d9af-463e-59bf-fb110f1b56f3" href="cart.html" class="einkaufswagen-button w-button">Zum Einkaufswagen</a>
                           </div>
                         </div>
                       </form>
                       <div bind="4bc36725-f958-4612-d2cb-e90fd749bb50" class="w-commerce-commercecartemptystate">
-                        <div aria-label="This cart is empty" aria-live="polite" class="text-block-110">Your cart is empty.</div>
+                        <div class="empty-cart-content">
+                          <div class="empty-cart-icon">
+                            <img src="/images/bag-outline.svg" alt="Shopping bag" style="width: 64px; height: 64px; opacity: 0.3;">
+                          </div>
+                          <div aria-label="This cart is empty" aria-live="polite" class="text-block-110 empty-cart-message">Your cart is empty</div>
+                          <p class="empty-cart-subtitle">Add items to your cart to continue shopping</p>
+                          <a href="/" class="empty-cart-button button-outline-black w-inline-block">
+                            <div class="button-text">Continue Shopping</div>
+                          </a>
+                        </div>
                       </div>
                       <div aria-live="assertive" bind="4bc36725-f958-4612-d2cb-e90fd749bb53" style="display:none" data-node-type="commerce-cart-error" class="w-commerce-commercecarterrorstate">
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb54" class="error-message w-cart-error-msg" data-w-cart-quantity-error="Die angefragte Menge überschreitet die Verfügbarkeit." data-w-cart-general-error="Ups, irgendwas scheint schiefgelaufen zu sein." data-w-cart-checkout-error="Checkout ist auf dieser Seite deaktiviert." data-w-cart-cart_order_min-error="Mindestbestellwert nicht erreicht. Fügen Sie weitere Artikel hinzu." data-w-cart-subscription_error-error="Bitte bestätigen Sie vor dem Kauf Ihre Adresse per E-Mail-Einladung für Bestellupdates.">Die angefragte Menge überschreitet die Verfügbarkeit.</div>
@@ -417,19 +426,19 @@
               <div data-w-id="4bc36725-f958-4612-d2cb-e90fd749bb59" data-is-ix2-target="1" data-animation-type="lottie" data-src="documents/animation_lmqenqw5.json" data-loop="0" data-direction="1" data-autoplay="0" data-renderer="svg" data-default-duration="2" data-duration="0" data-ix2-initial-state="0"></div>
             </div>
             <div class="nav-center">
-              <a href="index.html" class="nav-logo-link w-inline-block"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
+              <a href="index.html" class="nav-logo-link w-inline-block"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="logo-stonearts"></a>
             </div>
             <div class="nav-right">
               <div class="button-wrapper-menu div-block-663 div-block-664 div-block-665">
                 <div class="account-wrapper"><img src="images/person-outline-2.svg" loading="lazy" alt="" class="image-121"></div>
                 <div bind="4bc36725-f958-4612-d2cb-e90fd749bb61" data-open-product="" data-wf-cart-type="rightSidebar" data-wf-cart-query="" data-wf-page-link-href-prefix="" data-wf-cart-easing="ease-out-quart" data-wf-cart-duration="500" class="w-commerce-commercecartwrapper" data-node-type="commerce-cart-wrapper">
                   <a bind="4bc36725-f958-4612-d2cb-e90fd749bb62" class="w-commerce-commercecartopenlink cart-button-3 w-inline-block" role="button" aria-haspopup="dialog" aria-label="Open cart" data-node-type="commerce-cart-open-link" href="#">
-                    <div bind="4bc36725-f958-4612-d2cb-e90fd749bb63" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="images/bag-outline-1.svg" loading="lazy" alt="" class="image-122">
+                    <div bind="4bc36725-f958-4612-d2cb-e90fd749bb63" class="w-commerce-commercecartopenlinkcount cart-quantity-3">0</div><img src="/images/bag-outline.svg" loading="lazy" alt="" class="image-122">
                   </a>
                   <div bind="4bc36725-f958-4612-d2cb-e90fd749bb65" style="display:none" class="w-commerce-commercecartcontainerwrapper w-commerce-commercecartcontainerwrapper--cartType-rightSidebar" data-node-type="commerce-cart-container-wrapper">
                     <div bind="4bc36725-f958-4612-d2cb-e90fd749bb66" data-node-type="commerce-cart-container" role="dialog" class="w-commerce-commercecartcontainer cart-container-3">
                       <div bind="4bc36725-f958-4612-d2cb-e90fd749bb67" class="w-commerce-commercecartheader">
-                        <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb68" class="w-commerce-commercecartheading heading-254">Your shopping cart</h4>
+                        <h4 bind="4bc36725-f958-4612-d2cb-e90fd749bb68" class="w-commerce-commercecartheading heading-254"><img src="/images/bag-outline.svg" alt="Shopping cart" style="width: 24px; height: 24px;" /></h4>
                         <a bind="4bc36725-f958-4612-d2cb-e90fd749bb6a" class="w-commerce-commercecartcloselink w-inline-block" role="button" aria-label="Close cart" data-node-type="commerce-cart-close-link"><svg width="16px" height="16px" viewbox="0 0 16 16">
                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                               <g fill-rule="nonzero" fill="#333333">
@@ -482,13 +491,22 @@
                                   <div>Pay with browser.</div>
                                 </a>
                               </div>
-                              <a href="customer-type-selection.html" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb8c" class="w-commerce-commercecartcheckoutbutton checkout-button-3" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">Continue to Checkout</a>
+                              <a href="customer-type-selection.html" value="Continue to Checkout" bind="4bc36725-f958-4612-d2cb-e90fd749bb8c" class="w-commerce-commercecartcheckoutbutton checkout-button-3" data-loading-text="Einen Augenblick..." data-node-type="cart-checkout-button">To the checkout</a>
                               <a bind="228b8eef-42c0-792b-692e-59e3ee23df8e" href="cart.html" class="einkaufswagen-button w-button">Zum Einkaufswagen</a>
                             </div>
                           </div>
                         </form>
                         <div bind="4bc36725-f958-4612-d2cb-e90fd749bb8d" class="w-commerce-commercecartemptystate">
-                          <div aria-label="This cart is empty" aria-live="polite" class="text-block-111">Keine Artikel gefunden.</div>
+                          <div class="empty-cart-content">
+                            <div class="empty-cart-icon">
+                              <img src="/images/bag-outline.svg" alt="Shopping bag" style="width: 64px; height: 64px; opacity: 0.3;">
+                            </div>
+                            <div aria-label="This cart is empty" aria-live="polite" class="text-block-111 empty-cart-message">Your cart is empty</div>
+                            <p class="empty-cart-subtitle">Add items to your cart to continue shopping</p>
+                            <a href="/" class="empty-cart-button button-outline-black w-inline-block">
+                              <div class="button-text">Continue Shopping</div>
+                            </a>
+                          </div>
                         </div>
                         <div aria-live="assertive" bind="4bc36725-f958-4612-d2cb-e90fd749bb90" style="display:none" data-node-type="commerce-cart-error" class="w-commerce-commercecarterrorstate">
                           <div bind="4bc36725-f958-4612-d2cb-e90fd749bb91" class="error-message-2 w-cart-error-msg" data-w-cart-quantity-error="Produkt in dieser Menge nicht verfügbar." data-w-cart-general-error="Fehler beim Hinzufügen zum Warenkorb." data-w-cart-checkout-error="Bestellabschluss deaktiviert." data-w-cart-cart_order_min-error="Mindestbestellwert nicht erreicht. Fügen Sie weitere Artikel hinzu." data-w-cart-subscription_error-error="Bitte bestätigen Sie vor dem Kauf Ihre Adresse per E-Mail-Einladung für Bestellupdates.">Produkt in dieser Menge nicht verfügbar.</div>
@@ -650,7 +668,7 @@
                 </div>
                 <div class="brand_wrapper">
                   <div class="text-block-88">by</div>
-                  <div class="image_wrapper product _1 stonearts"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
+                  <div class="image_wrapper product _1 stonearts"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
                 </div>
                 <div class="price_wrapper">
                   <div bind="61ebb851-32a9-5db0-1e77-0954bc4786b8" class="text-block-131"></div>
@@ -684,7 +702,6 @@
                             <div bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf21" role="listitem" class="swiper-slide is-slider-selector w-dyn-item">
                               <a bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf22" aria-label="Akurock Akustikpaneele Link" href="#" class="slider-selector_link is-slider-selector w-inline-block">
                                 <div class="slider-selector_height"><img bind="116c2318-c33b-dcc5-4ef0-b6d435cfdf24" loading="lazy" width="95" src="" alt="" class="slider-selector_img">
-                                  <div class="checkmark_wrapper mobile"><img src="images/Aktive-Produkt-Selection-Kachel-Kreis-mit-Hackerl-Schwarz.svg" loading="lazy" alt="" class="checkmark_mobile"></div>
                                 </div>
                               </a>
                             </div>
@@ -953,7 +970,7 @@
                   </div>
                   <div class="brand_wrapper">
                     <div class="text-block-95">by</div>
-                    <div class="image_wrapper product"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
+                    <div class="image_wrapper product"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
                   </div>
                   <div class="price_wrapper">
                     <h3 bind="597bafda-e3af-4b85-93c5-f8f115780269" class="heading-256"></h3>
@@ -1213,7 +1230,7 @@
             <div id="w-node-_409f9c8b-4b78-5f06-d0ad-57ad5bbfb29f-d3e03b91" class="w-layout-cell cell-7" style="display: none;">
               <div id="w-node-_409f9c8b-4b78-5f06-d0ad-57ad5bbfb2a0-d3e03b91" class="product_text_wrapper">
                 <div class="pd-heading">
-                  <div class="header-wrapper-product"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" width="162" alt="" class="image-145">
+                  <div class="header-wrapper-product"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" width="162" alt="" class="image-145">
                     <h1 class="heading-157">AKUROCK</h1>
                   </div>
                   <h2 bind="409f9c8b-4b78-5f06-d0ad-57ad5bbfb2a6" class="heading-158"></h2>
@@ -1312,7 +1329,7 @@
                 </div>
                 <div class="brand_wrapper">
                   <div class="text-block-88">by</div>
-                  <div class="image_wrapper product logo"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
+                  <div class="image_wrapper product logo"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" alt="" class="image-136"></div>
                 </div>
                 <div class="price_wrapper">
                   <h3 data-commerce-type="variation-price" bind="562d66a6-e38c-7881-a616-1182f9ed3ad8" class="heading-159"></h3>
@@ -1876,7 +1893,7 @@
                   </div>
                 </div>
                 <div id="w-node-b1144648-ea22-8332-4fb8-cb5f7119a7c1-7119a779" class="follow-us-wrapper">
-                  <div id="w-node-c864b520-897b-0062-ab70-2c8afeac0149-7119a779" class="slogan-wrap-footer"><img src="images/stonearts®-logo-black-long.svg" loading="lazy" width="151" alt="" class="image-123"></div>
+                  <div id="w-node-c864b520-897b-0062-ab70-2c8afeac0149-7119a779" class="slogan-wrap-footer"><img src="/images/stonearts®-logo-black-long.svg" loading="lazy" width="151" alt="" class="image-123"></div>
                   <h3 class="heading-148">#follow us</h3>
                   <div class="social-media-icon_wrapper">
                     <a href="https://www.facebook.com/stoneartsglobal?_rdr" target="_blank" class="social-media-link w-inline-block"><img src="images/facebook-circle-Black.svg" loading="lazy" width="39" alt="" class="image-99"></a>
@@ -2049,16 +2066,9 @@
       });
       if ($element.hasClass('is-slider-selector')) {
         let selectedIndex = -1;
-        function updateCheckmarkWrapper() {
-          $element.find('.swiper-slide .checkmark_wrapper').hide();
-          if (selectedIndex !== -1) {
-            $(swiper.slides[selectedIndex]).find('.checkmark_wrapper').css('display', 'flex');
-          }
-        }
         function handleVariationClick(clickedIndex) {
           selectedIndex = clickedIndex;
           swiper.slideTo(selectedIndex, 300);
-          updateCheckmarkWrapper();
           try {
             localStorage.setItem(`swiperSlideIndex_${index}`, selectedIndex);
           } catch (error) {
