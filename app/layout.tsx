@@ -200,6 +200,15 @@ export default function RootLayout({
                 spaceBetween: "4%",
                 rewind: false,
                 watchOverflow: true,
+                // Touch/Swipe settings for mobile
+                touchEventsTarget: 'container',
+                touchStartPreventDefault: false,
+                touchMoveStopPropagation: false,
+                simulateTouch: true,
+                allowTouchMove: true,
+                touchRatio: 1,
+                touchAngle: 45,
+                grabCursor: true,
                 mousewheel: {
                   forceToAxis: true
                 },

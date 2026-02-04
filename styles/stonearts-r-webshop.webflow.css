@@ -2149,6 +2149,22 @@ blockquote {
   width: 33.7%;
 }
 
+/* Enable touch/swipe on mobile for Swiper */
+.swiper.is-slider-main {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swiper.is-slider-main .swiper-wrapper {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swiper.is-slider-main .swiper-slide {
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .swiper.is-slider-main {
   z-index: 1;
   position: relative;
@@ -2169,6 +2185,24 @@ blockquote {
   flex-direction: row;
   position: relative;
   overflow: visible;
+}
+
+/* Product image gallery swiper - enable touch/swipe on mobile */
+.swiper.is-swiper-product {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swiper.is-swiper-product .swiper-wrapper {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swiper.is-swiper-product .swiper-slide {
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .swiper.showcase {

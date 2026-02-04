@@ -915,23 +915,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <!-- Product Grid Section - Sample Boxes Style -->
-      <section class="section product samples" id="homepage-product-grid">
-        <div class="w-layout-blockcontainer container-products samples w-container">
-          <div class="sample-content_wrap">
-            <div class="sample-selection_wrap">
-              <div class="w-dyn-list">
-                <div role="list" class="sample-grid w-dyn-items" id="homepage-product-grid-container">
-                  <!-- Product cards will be populated by populate-cms.js -->
-                </div>
-                <div class="w-dyn-empty" style="display:none;">
-                  <div>No items found.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
       <div class="section main social">
         <div class="container main social">
           <div bind="858eacac-a120-c74c-6cbf-2c7eb8d66747" class="code-embed-3 w-embed w-script">

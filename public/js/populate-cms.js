@@ -698,15 +698,86 @@
     // Wait a bit for DOM to update
     setTimeout(() => {
       // Check if Swiper is already initialized
-      if (window.Swiper && container.swiper) {
+      if (window.Swiper) {
         try {
-          container.swiper.update();
-          container.swiper.slideTo(0);
+          // Try to find swiper instance on the container or the swiper element
+          const swiperElement = container.querySelector ? container.querySelector('.swiper') : container;
+          if (swiperElement && swiperElement.swiper) {
+            swiperElement.swiper.update();
+            swiperElement.swiper.updateSlides();
+            swiperElement.swiper.updateSlidesClasses();
+            swiperElement.swiper.updateSize();
+            swiperElement.swiper.slideTo(0, 0); // Reset to first slide without animation
+            console.log('populate-cms.js: Swiper updated successfully');
+          } else if (container.swiper) {
+            // Fallback: check if swiper is on container directly
+            container.swiper.update();
+            container.swiper.updateSlides();
+            container.swiper.updateSlidesClasses();
+            container.swiper.updateSize();
+            container.swiper.slideTo(0, 0);
+            console.log('populate-cms.js: Swiper updated successfully (fallback)');
+          } else {
+            console.warn('populate-cms.js: Swiper instance not found, may need to reinitialize');
+            // Try to reinitialize if jQuery and Swiper are available
+            if (window.$ && window.Swiper && container.querySelector) {
+              const $container = $(container);
+              if ($container.hasClass('slider-selector_component') || $container.closest('.slider-selector_component').length) {
+                const $element = $container.hasClass('slider-selector_component') ? $container : $container.closest('.slider-selector_component');
+                const swiperContainer = $element.find('.swiper')[0];
+                if (swiperContainer && !swiperContainer.swiper) {
+                  // Reinitialize Swiper
+                  const swiperConfig = {
+                    slidesPerView: $element.hasClass('is-slider-product') ? 1 : 'auto',
+                    slidesPerGroup: 1,
+                    speed: 300,
+                    slideToClickedSlide: false,
+                    followFinger: true,
+                    rewind: false,
+                    loop: false,
+                    centeredSlides: false,
+                    touchEventsTarget: 'container',
+                    touchStartPreventDefault: false,
+                    touchMoveStopPropagation: false,
+                    simulateTouch: true,
+                    allowTouchMove: true,
+                    touchRatio: 1,
+                    touchAngle: 45,
+                    grabCursor: true,
+                  };
+                  const swiper = new Swiper(swiperContainer, {
+                    ...swiperConfig,
+                    pagination: {
+                      el: $element.find('.swiper-bullet-wrapper')[0],
+                      bulletActiveClass: 'is-active',
+                      bulletClass: 'swiper-bullet',
+                      bulletElement: 'button',
+                      clickable: true,
+                      dynamicBullets: $element.hasClass('is-slider-product'),
+                    },
+                    navigation: {
+                      nextEl: $element.find('.swiper-next')[0],
+                      prevEl: $element.find('.swiper-prev')[0],
+                      disabledClass: 'is-disabled'
+                    },
+                    scrollbar: {
+                      el: $element.find('.swiper-drag-wrapper')[0],
+                      draggable: true,
+                      dragClass: 'swiper-drag',
+                      snapOnRelease: true
+                    }
+                  });
+                  swiperContainer.swiper = swiper;
+                  console.log('populate-cms.js: Swiper reinitialized successfully');
+                }
+              }
+            }
+          }
         } catch (e) {
           console.warn('populate-cms.js: Could not update Swiper:', e);
         }
       }
-    }, 100);
+    }, 200); // Increased timeout to ensure DOM is fully updated
   }
 
   /**
@@ -1265,17 +1336,29 @@
               const accessoryVariantId = accessory.variantId || '';
               const accessoryDataId = accessory.id || '';
               
-              // Normalize image path for Next.js
+              // Normalize image path for Next.js using getImagePath helper
               let accessoryImage = accessory.mainImage || '';
-              if (accessoryImage && !accessoryImage.startsWith('http') && !accessoryImage.startsWith('/')) {
-                accessoryImage = '/' + accessoryImage;
-              } else if (accessoryImage && accessoryImage.startsWith('images/')) {
-                accessoryImage = '/' + accessoryImage;
+              if (accessoryImage) {
+                // Use getImagePath helper to normalize paths (handles CDN to local conversion)
+                const normalizedPath = getImagePath(accessory, 'mainImage');
+                if (normalizedPath) {
+                  accessoryImage = normalizedPath;
+                } else {
+                  // Fallback: manual normalization if getImagePath doesn't return a value
+                  if (accessoryImage.startsWith('images/') && !accessoryImage.startsWith('/images/')) {
+                    accessoryImage = '/' + accessoryImage;
+                  } else if (!accessoryImage.startsWith('/') && !accessoryImage.startsWith('http')) {
+                    // If it's a relative path without images/, assume it's in images/
+                    accessoryImage = '/images/' + accessoryImage;
+                  }
+                }
               }
+              
+              console.log(`populate-cms.js: Accessory ${accessory.name} - image path: ${accessory.mainImage} -> ${accessoryImage}`);
               
               item.innerHTML = `
                 <div class="content_additionals">
-                  <div class="addtions_img_container"><img loading="lazy" src="${accessoryImage}" alt="${accessory.name || ''}" class="${imageClass}"></div>
+                  <div class="addtions_img_container"><img loading="lazy" src="${accessoryImage}" alt="${accessory.name || ''}" class="${imageClass}" onerror="console.error('Accessory image failed to load:', '${accessoryImage}'); this.onerror=null;"></div>
                   <div class="description additionals">
                     <h2 class="additional_top">${accessory.name || ''}</h2>
                     <div class="text-block-92">${accessory.description || ''}</div>
@@ -1766,20 +1849,58 @@
 
   // Populate home page product slider
   function populateHomePageSlider() {
+    console.log('populate-cms.js: populateHomePageSlider called');
     const productSlider = document.querySelector('[bind="64b2a859-d0e1-7585-034c-483b3d178395"]');
-    if (!productSlider || !cmsData || !cmsData.products) return;
+    if (!productSlider) {
+      console.warn('populate-cms.js: Product slider element not found');
+      return;
+    }
+    if (!cmsData) {
+      console.warn('populate-cms.js: CMS data not loaded yet');
+      return;
+    }
+    if (!cmsData.products || !Array.isArray(cmsData.products) || cmsData.products.length === 0) {
+      console.warn('populate-cms.js: No products data available for homepage slider');
+      return;
+    }
+    console.log('populate-cms.js: Found', cmsData.products.length, 'products in CMS data');
 
     // Find the correct wrapper - there are two swiper-wrapper divs, use the one that's a direct child
     const wrappers = productSlider.querySelectorAll('.swiper-wrapper');
-    const wrapper = wrappers.length > 1 ? wrappers[1] : wrappers[0]; // Use second wrapper if multiple exist
-    const emptyState = productSlider.querySelector('.w-dyn-empty');
+    console.log('populate-cms.js: Found', wrappers.length, 'swiper-wrapper elements');
     
-    if (emptyState) emptyState.style.display = 'none';
-    
-    // Hide the first wrapper if it exists (the empty one) to prevent blank section
-    if (wrappers.length > 1 && wrappers[0]) {
-      wrappers[0].style.display = 'none';
+    // Find the wrapper that has content (hardcoded products) - usually the second one
+    let wrapper = null;
+    if (wrappers.length > 1) {
+      // Check which wrapper has slides
+      for (let i = 0; i < wrappers.length; i++) {
+        const slides = wrappers[i].querySelectorAll('.swiper-slide');
+        if (slides.length > 0) {
+          wrapper = wrappers[i];
+          console.log('populate-cms.js: Using wrapper', i, 'with', slides.length, 'existing slides');
+          break;
+        }
+      }
+      // If no wrapper with slides found, use the second one
+      if (!wrapper) {
+        wrapper = wrappers[1];
+        console.log('populate-cms.js: No wrapper with slides found, using second wrapper');
+      }
+      // Hide the first wrapper if it exists (the empty one) to prevent blank section
+      if (wrappers[0] && wrappers[0] !== wrapper) {
+        wrappers[0].style.display = 'none';
+      }
+    } else {
+      wrapper = wrappers[0];
     }
+    
+    if (!wrapper) {
+      console.error('populate-cms.js: Could not find swiper-wrapper element');
+      return;
+    }
+    
+    const emptyState = productSlider.querySelector('.w-dyn-empty');
+    if (emptyState) emptyState.style.display = 'none';
     
     if (wrapper) {
       // Use the collection's product list to match the reference site exactly
@@ -1802,11 +1923,25 @@
           .sort((a, b) => (a.sorting || 999) - (b.sorting || 999));
       }
       
+      console.log('populate-cms.js: Found', sortedProducts.length, 'products to display in slider');
+      
+      // Only clear if we have products to add
+      if (sortedProducts.length === 0) {
+        console.warn('populate-cms.js: No products found to display, keeping existing slides');
+        // Show the empty state if no products
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+      }
+      
       // Clear existing slides and create new ones dynamically
+      // Store existing slides count for logging
+      const existingSlides = wrapper.querySelectorAll('.swiper-slide').length;
+      console.log('populate-cms.js: Clearing', existingSlides, 'existing slides');
       wrapper.innerHTML = '';
       
       // PATTERN ENFORCEMENT: Only display products that follow the pattern
-      sortedProducts.forEach((product) => {
+      sortedProducts.forEach((product, index) => {
+        console.log(`populate-cms.js: Adding product ${index + 1}/${sortedProducts.length}: ${product.name}`);
         // Validate product has required fields
         if (!product.name || !product.slug) {
           console.warn('populate-cms.js: Product missing required fields for homepage slider, skipping:', product);
@@ -1948,6 +2083,50 @@
         
         wrapper.appendChild(slide);
       });
+      
+      console.log('populate-cms.js: Successfully added', sortedProducts.length, 'product slides to homepage slider');
+      
+      // CRITICAL: Update Swiper after dynamically adding slides to enable touch/swipe
+      // Find the Swiper instance and update it
+      try {
+        const swiperContainer = productSlider.closest('.slider-main_component');
+        if (swiperContainer) {
+          const swiperElement = swiperContainer.querySelector('.swiper');
+          if (swiperElement) {
+            // Wait a bit for Swiper to be initialized (it might initialize after DOM ready)
+            const updateSwiper = () => {
+              if (swiperElement.swiper) {
+                // Swiper instance exists, update it
+                swiperElement.swiper.update();
+                swiperElement.swiper.updateSlides();
+                swiperElement.swiper.updateSlidesClasses();
+                swiperElement.swiper.updateSize();
+                console.log('populate-cms.js: Swiper updated after adding slides');
+                return true;
+              }
+              return false;
+            };
+            
+            // Try immediately
+            if (!updateSwiper()) {
+              // If Swiper not initialized yet, wait and retry
+              let retries = 0;
+              const maxRetries = 10;
+              const retryInterval = setInterval(() => {
+                retries++;
+                if (updateSwiper() || retries >= maxRetries) {
+                  clearInterval(retryInterval);
+                  if (retries >= maxRetries) {
+                    console.warn('populate-cms.js: Swiper not found after adding slides, it may initialize later');
+                  }
+                }
+              }, 100);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('populate-cms.js: Could not update Swiper after adding slides:', e);
+      }
     }
 
     // Populate marketing content sections

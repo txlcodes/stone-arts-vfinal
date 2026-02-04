@@ -2043,14 +2043,40 @@
       console.log("Initializing slider", index, element);
       const $element = $(element);
       const swiperContainer = $element.find(".swiper")[0];
+      
+      // Special configuration for product image gallery (is-swiper-product)
+      const isProductGallery = $element.hasClass('is-slider-product') || swiperContainer.classList.contains('is-swiper-product');
+      
+      const productGalleryConfig = isProductGallery ? {
+        slidesPerView: 1,
+        slidesPerGroup: 1,
+        spaceBetween: 0,
+        loop: false,
+        // Touch/Swipe settings for mobile
+        touchEventsTarget: 'container',
+        touchStartPreventDefault: false,
+        touchMoveStopPropagation: false,
+        simulateTouch: true,
+        allowTouchMove: true,
+        touchRatio: 1,
+        touchAngle: 45,
+        grabCursor: true,
+        // Allow swiping on mobile
+        resistance: true,
+        resistanceRatio: 0.85,
+      } : {};
+      
       const swiper = new Swiper(swiperContainer, {
         ...swiperConfig,
+        ...productGalleryConfig,
         pagination: {
           el: $element.find(".swiper-bullet-wrapper")[0],
           bulletActiveClass: "is-active",
           bulletClass: "swiper-bullet",
           bulletElement: "button",
-          clickable: true
+          clickable: true,
+          dynamicBullets: isProductGallery,
+          dynamicMainBullets: isProductGallery ? 3 : 1
         },
         navigation: {
           nextEl: $element.find(".swiper-next")[0],
@@ -2064,6 +2090,11 @@
           snapOnRelease: true
         }
       });
+      
+      // Store swiper instance on container for later updates
+      if (swiperContainer) {
+        swiperContainer.swiper = swiper;
+      }
       if ($element.hasClass('is-slider-selector')) {
         let selectedIndex = -1;
         function handleVariationClick(clickedIndex) {
